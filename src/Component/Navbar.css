@@ -1,0 +1,27 @@
+.navbar {
+  background-color: #004aad;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
+}
+
+.logo {
+  height: 40px;
+  margin-right: 10px;
+}
+
+.app-name {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.nav-right a {
+  color: white;
+  margin-left: 15px;
+  text-decoration: none;
+}
+
+.nav-right a:hover {
+  text-decoration: underline;
+}

@@ -1,0 +1,20 @@
+.home-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 60px);
+  background-color: #f5f7fa;
+}
+
+.promo-box {
+  background: white;
+  padding: 30px;
+  text-align: center;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+}
+
+.promo-logo {
+  width: 100px;
+  margin-bottom: 20px;
+}
