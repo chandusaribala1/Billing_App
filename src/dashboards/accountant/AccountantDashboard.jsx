@@ -1,113 +1,41 @@
+// AccountantDashboard.jsx
 import React from "react";
-import { Routes, Route, Link, useLocation } from "react-router-dom";
+import { Routes, Route, Link } from "react-router-dom";
+import InvoicesPage from "./InvoicesPage.jsx";
+import PaymentsPage from "./PaymentsPage.jsx";
+import ReportsPage from "./ReportsPage.jsx";
 
-// ---------------- Navbar Component ----------------
-const Navbar = () => {
-  return (
-    <div
-      style={{
-        height: "60px",
-        background: "#4CAF50",
-        color: "#fff",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 20px",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-      }}
-    >
-      <h2>Accountant Dashboard</h2>
-      <div>
-        <button
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "#fff",
-            fontSize: "16px",
-            cursor: "pointer"
-          }}
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// ---------------- Sidebar Component ----------------
-const Sidebar = ({ links }) => {
-  const location = useLocation();
-
-  return (
-    <div
-      style={{
-        width: "200px",
-        background: "#222",
-        color: "#fff",
-        padding: "20px",
-        minHeight: "calc(100vh - 60px)" // 60px for navbar
-      }}
-    >
-      <h3>Menu</h3>
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {links.map((link) => (
-          <li key={link.path} style={{ margin: "10px 0" }}>
-            <Link
-              to={link.path}
-              style={{
-                color: location.pathname.includes(link.path) ? "#4CAF50" : "#fff",
-                textDecoration: "none",
-                fontWeight: location.pathname.includes(link.path) ? "bold" : "normal"
-              }}
-            >
-              {link.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-};
-
-// ---------------- Pages ----------------
-const InvoicesPage = () => (
-  <div>
-    <h1>Invoices</h1>
-    <p>List of all invoices will appear here.</p>
-  </div>
-);
-
-const PaymentsPage = () => (
-  <div>
-    <h1>Payments</h1>
-    <p>List of all payments will appear here.</p>
-  </div>
-);
-
-const ReportsPage = () => (
-  <div>
-    <h1>Reports</h1>
-    <p>Reports and analytics will appear here.</p>
-  </div>
-);
-
-// ---------------- Accountant Dashboard ----------------
 const AccountantDashboard = () => {
   const links = [
     { name: "Invoices", path: "invoices" },
     { name: "Payments", path: "payments" },
-    { name: "Reports", path: "reports" }
+    { name: "Reports", path: "reports" },
   ];
 
   return (
-    <div>
-      {/* Navbar at the top */}
-      <Navbar />
+    <div className="dashboard-container">
+      {/* Navbar */}
+      <nav className="navbar">
+        <h2 className="navbar-title">Accountant Dashboard</h2>
+        <div className="navbar-links">
+          <Link to="/">Home</Link>
+          <Link to="/logout">Logout</Link>
+        </div>
+      </nav>
 
-      {/* Sidebar + Main Content */}
-      <div style={{ display: "flex" }}>
-        <Sidebar links={links} />
-        <div style={{ padding: "20px", flex: 1 }}>
+      {/* Main Content */}
+      <div className="main-content">
+        {/* Sidebar */}
+        <aside className="sidebar">
+          {links.map((link, index) => (
+            <Link key={index} to={link.path} className="sidebar-link">
+              {link.name}
+            </Link>
+          ))}
+        </aside>
+
+        {/* Page Content */}
+        <div className="page-content">
           <Routes>
             <Route path="invoices" element={<InvoicesPage />} />
             <Route path="payments" element={<PaymentsPage />} />
@@ -115,6 +43,59 @@ const AccountantDashboard = () => {
           </Routes>
         </div>
       </div>
+
+      {/* CSS Styles */}
+      <style>{`
+        .dashboard-container {
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          font-family: Arial, sans-serif;
+        }
+        .navbar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 20px;
+          background-color: #2c3e50;
+          color: white;
+        }
+        .navbar-title {
+          margin: 0;
+        }
+        .navbar-links a {
+          margin-left: 20px;
+          color: white;
+          text-decoration: none;
+        }
+        .navbar-links a:hover {
+          text-decoration: underline;
+        }
+        .main-content {
+          display: flex;
+          flex: 1;
+        }
+        .sidebar {
+          width: 200px;
+          background-color: #34495e;
+          padding-top: 20px;
+          display: flex;
+          flex-direction: column;
+        }
+        .sidebar-link {
+          padding: 12px 20px;
+          color: white;
+          text-decoration: none;
+        }
+        .sidebar-link:hover {
+          background-color: #3d566e;
+        }
+        .page-content {
+          flex: 1;
+          padding: 20px;
+          background-color: #ecf0f1;
+        }
+      `}</style>
     </div>
   );
 };
