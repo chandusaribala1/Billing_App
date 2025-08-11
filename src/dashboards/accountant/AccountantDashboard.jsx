@@ -1,5 +1,38 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
+
+// ---------------- Navbar Component ----------------
+const Navbar = () => {
+  return (
+    <div
+      style={{
+        height: "60px",
+        background: "#4CAF50",
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 20px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+      }}
+    >
+      <h2>Accountant Dashboard</h2>
+      <div>
+        <button
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "#fff",
+            fontSize: "16px",
+            cursor: "pointer"
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+  );
+};
 
 // ---------------- Sidebar Component ----------------
 const Sidebar = ({ links }) => {
@@ -12,10 +45,10 @@ const Sidebar = ({ links }) => {
         background: "#222",
         color: "#fff",
         padding: "20px",
-        minHeight: "100vh"
+        minHeight: "calc(100vh - 60px)" // 60px for navbar
       }}
     >
-      <h2>Accountant</h2>
+      <h3>Menu</h3>
       <ul style={{ listStyle: "none", padding: 0 }}>
         {links.map((link) => (
           <li key={link.path} style={{ margin: "10px 0" }}>
@@ -23,7 +56,8 @@ const Sidebar = ({ links }) => {
               to={link.path}
               style={{
                 color: location.pathname.includes(link.path) ? "#4CAF50" : "#fff",
-                textDecoration: "none"
+                textDecoration: "none",
+                fontWeight: location.pathname.includes(link.path) ? "bold" : "normal"
               }}
             >
               {link.name}
@@ -66,27 +100,23 @@ const AccountantDashboard = () => {
   ];
 
   return (
-    <div style={{ display: "flex" }}>
-      <Sidebar links={links} />
-      <div style={{ padding: "20px", flex: 1 }}>
-        <Routes>
-          <Route path="invoices" element={<InvoicesPage />} />
-          <Route path="payments" element={<PaymentsPage />} />
-          <Route path="reports" element={<ReportsPage />} />
-        </Routes>
+    <div>
+      {/* Navbar at the top */}
+      <Navbar />
+
+      {/* Sidebar + Main Content */}
+      <div style={{ display: "flex" }}>
+        <Sidebar links={links} />
+        <div style={{ padding: "20px", flex: 1 }}>
+          <Routes>
+            <Route path="invoices" element={<InvoicesPage />} />
+            <Route path="payments" element={<PaymentsPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+          </Routes>
+        </div>
       </div>
     </div>
   );
 };
 
-// ---------------- Main App ----------------
-export default function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/accountant/invoices" />} />
-        <Route path="/accountant/*" element={<AccountantDashboard />} />
-      </Routes>
-    </Router>
-  );
-}
+export default AccountantDashboard;
