@@ -15,14 +15,11 @@ import {
 const ReportsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Sample financial summary data
   const financialSummary = {
     profit: 45000,
     expenses: 22000,
     cashFlow: 18000,
   };
-
-  // Sample sales data for table and bar chart
   const salesData = [
     { id: 1, client: "John Doe", amount: 5000, date: "2025-01-15" },
     { id: 2, client: "Jane Smith", amount: 7000, date: "2025-02-12" },
@@ -30,8 +27,6 @@ const ReportsPage = () => {
     { id: 4, client: "Maria Lopez", amount: 8000, date: "2025-04-25" },
     { id: 5, client: "Tim Lee", amount: 6000, date: "2025-05-10" },
   ];
-
-  // Aggregate sales by month for bar chart
   const monthlySales = [
     { month: "Jan", sales: 5000 },
     { month: "Feb", sales: 7000 },
@@ -40,7 +35,7 @@ const ReportsPage = () => {
     { month: "May", sales: 6000 },
   ];
 
-  // Expense categories for pie chart
+  
   const expenseData = [
     { name: "Rent", value: 7000 },
     { name: "Salaries", value: 10000 },
@@ -50,7 +45,7 @@ const ReportsPage = () => {
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
-  // Filtered sales by search term
+
   const filteredSales = salesData.filter(sale =>
     sale.client.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -59,7 +54,7 @@ const ReportsPage = () => {
     <div className="reports-container">
       <h1>Accountant Reports</h1>
 
-      {/* Financial Summary Cards */}
+  
       <div className="summary-cards">
         <div className="card profit">
           <h3>Profit</h3>
@@ -75,7 +70,7 @@ const ReportsPage = () => {
         </div>
       </div>
 
-      {/* Sales Report Section */}
+ 
       <div className="sales-report">
         <h2>Sales Report</h2>
         <input
@@ -112,8 +107,6 @@ const ReportsPage = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Charts Section */}
       <div className="charts">
         <div className="chart-box">
           <h3>Monthly Sales</h3>
@@ -150,8 +143,6 @@ const ReportsPage = () => {
           </ResponsiveContainer>
         </div>
       </div>
-
-      {/* Styles */}
       <style>{`
         .reports-container {
           font-family: Arial, sans-serif;

@@ -1,14 +1,12 @@
-/* Page background */
 .auth-container {
   min-height: 100vh;
+  width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
   background: linear-gradient(to right, #f8f9fa, #e9ecef);
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
-
-/* The white login box */
 .auth-box {
   background: #ffffff;
   padding: 2.5rem;
@@ -17,16 +15,13 @@
   border-radius: 12px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   text-align: center;
+  
 }
-
-/* Headings */
 .auth-box h2 {
   margin-bottom: 1.5rem;
   font-weight: 600;
   color: #212529;
 }
-
-/* Role selection */
 .role-selection {
   display: flex;
   justify-content: space-between;
@@ -42,8 +37,6 @@
 .role-selection input {
   margin-right: 6px;
 }
-
-/* Input fields */
 .auth-box input[type="email"],
 .auth-box input[type="password"],
 .auth-box input[type="text"] {
@@ -62,7 +55,6 @@
   outline: none;
 }
 
-/* Buttons */
 .auth-box button {
   width: 100%;
   padding: 0.75rem;
@@ -80,7 +72,6 @@
   background-color: #4338ca;
 }
 
-/* Forgot password / back link */
 .forgot-password {
   margin-top: 0.75rem;
   font-size: 0.9rem;

@@ -63,8 +63,6 @@ const PaymentsPage = () => {
   ];
 
   const COLORS = ["#4CAF50", "#2196F3", "#FF9800", "#9C27B0"];
-
-  // Inline styles for main layout
   const styles = {
     paymentsContainer: {
       padding: 20,
@@ -232,8 +230,6 @@ const PaymentsPage = () => {
       `}</style>
 
       <h1 style={styles.h1}>Payments Dashboard</h1>
-
-      {/* Summary Cards */}
       <div style={styles.summaryCards}>
         <div style={styles.card}>
           <CreditCard /> <span>Total Paid: ₹{summaryData.totalPaid}</span>
@@ -248,8 +244,6 @@ const PaymentsPage = () => {
           <RotateCcw /> <span>Refunds: {summaryData.refunds}</span>
         </div>
       </div>
-
-      {/* Search & Filter */}
       <div style={styles.filters}>
         <div style={styles.searchBox}>
           <Search size={18} />
@@ -269,8 +263,6 @@ const PaymentsPage = () => {
           <option>Refunded</option>
         </select>
       </div>
-
-      {/* Payments Table */}
       <table style={styles.table}>
         <thead>
           <tr>
@@ -342,8 +334,6 @@ const PaymentsPage = () => {
           ))}
         </tbody>
       </table>
-
-      {/* Charts */}
       <div style={styles.charts}>
         <div style={styles.chart}>
           <h3>Payments Over Time</h3>

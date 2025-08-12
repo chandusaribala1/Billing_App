@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./Auth.css";
-
+import "./Login.css"
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +29,7 @@ const Login = () => {
           <>
             <h2>Sign In</h2>
             <form onSubmit={handleLogin}>
-              {/* Selecting role */}
+            
               <div className="role-selection">
                 <label>
                   <input

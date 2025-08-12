@@ -3,12 +3,12 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { BrowserRouter } from 'react-router-dom'
 
-import AccountantDashboard from './dashboards/accountant/AccountantDashboard';
+// import AccountantDashboard from './dashboards/accountant/AccountantDashboard';
+// import AdminDashboard from './dashboards/admin/AdminDashboard';
+import App from './App';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
-     <AccountantDashboard/>
-     </BrowserRouter>
+     <App/>
   </StrictMode>,
 )
