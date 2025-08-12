@@ -1,4 +1,4 @@
-// AccountantDashboard.jsx
+
 import React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import InvoicesPage from "./InvoicesPage.jsx";
@@ -14,7 +14,7 @@ const AccountantDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Navbar */}
+     
       <nav className="navbar">
         <h2 className="navbar-title">Accountant Dashboard</h2>
         <div className="navbar-links">
@@ -23,9 +23,8 @@ const AccountantDashboard = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
       <div className="main-content">
-        {/* Sidebar */}
+       
         <aside className="sidebar">
           {links.map((link, index) => (
             <Link key={index} to={link.path} className="sidebar-link">
@@ -34,7 +33,6 @@ const AccountantDashboard = () => {
           ))}
         </aside>
 
-        {/* Page Content */}
         <div className="page-content">
           <Routes>
             <Route path="invoices" element={<InvoicesPage />} />
@@ -43,13 +41,12 @@ const AccountantDashboard = () => {
           </Routes>
         </div>
       </div>
-
-      {/* CSS Styles */}
       <style>{`
         .dashboard-container {
           display: flex;
           flex-direction: column;
           height: 100vh;
+          width:100vw;
           font-family: Arial, sans-serif;
         }
         .navbar {

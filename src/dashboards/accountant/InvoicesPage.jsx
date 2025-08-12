@@ -231,7 +231,6 @@ const InvoicesPage = () => {
           ))}
         </tbody>
       </table>
-      {/* CSS is provided within the same component */}
       <style>{`
         .container {
           font-family: 'Inter', sans-serif;
@@ -239,7 +238,7 @@ const InvoicesPage = () => {
           border-radius: 0.75rem;
           box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
           padding: 1.5rem;
-          max-width: 64rem;
+          max-width: 75rem;
           margin: 20px auto;
         }
 
@@ -248,6 +247,7 @@ const InvoicesPage = () => {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 20px;
+          
         }
         
         .title {
@@ -269,7 +269,7 @@ const InvoicesPage = () => {
           position: fixed;
           top: 0;
           left: 0;
-          width: 100%;
+          width: 150%;
           height: 100%;
           background: rgba(0, 0, 0, 0.5);
           display: flex;
@@ -378,7 +378,7 @@ const InvoicesPage = () => {
           font-weight: bold;
         }
         
-.status-overdue {
+        .status-overdue {
           color: #ef4444;
           font-weight: bold;
         }
@@ -403,11 +403,12 @@ const InvoicesPage = () => {
         }
         
         .edit-button, .delete-button, .download-button {
-            padding: 0.25rem 0.75rem;
+            padding: 0.25rem 0.25rem;
             border-radius: 0.375rem;
             border: none;
             cursor: pointer;
             font-weight: 500;
+            
         }
         
         .edit-button {

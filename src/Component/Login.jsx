@@ -30,7 +30,7 @@ const Login = () => {
           <>
             <h2>Sign In</h2>
             <form onSubmit={handleLogin}>
-              {/* Selecting role */}
+            
               <div className="role-selection">
                 <label>
                   <input
