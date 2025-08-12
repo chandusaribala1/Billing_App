@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { User, Box, FileText, CreditCard, BarChart2, LogOut, UserCircle2, Menu, Search } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import "./InvoicePage.jsx";
+import CustomersPage from "./CustomersPage.jsx";
+import InvoicePage from "./InvoicePage.jsx";
+import PaymentPage from "./PaymentPage.jsx";
+import ProductsPage from "./ProductsPage.jsx";
+import ReportsPage from "./ReportsPage.jsx";
 
 const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -174,9 +178,9 @@ const AdminDashboard = () => {
       case "products":
         return <ProductsPage />;
       case "invoices":
-        return <InvoicesPage />;
+        return <InvoicePage />;
       case "payments":
-        return <PaymentsPage />;
+        return <PaymentPage />;
       case "reports":
         return <ReportsPage />;
       default:
@@ -460,7 +464,8 @@ const AdminDashboard = () => {
           }
           .main-content {
             margin-left: 0 !important;
-          }
+          }import PaymentsPage from './../accountant/PaymentsPage';
+
         }
       `}</style>
 
