@@ -217,7 +217,8 @@ const AdminDashboard = () => {
         }
         .sidebar-header { 
         padding: 20px; 
-        font-size: 1.5rem; 
+        font-size: 1.5rem;
+        
         text-align: center; 
         border-bottom: 1px solid #3e4e5e; 
         user-select:none; 
@@ -246,13 +247,13 @@ const AdminDashboard = () => {
         .sidebar.collapsed .sidebar-menu-item span { display: none; }
         .main-content {
           flex-grow: 1;
-          margin-left: 240px;
+        
           transition: margin-left 0.3s;
           background: #f4f6f8;
           overflow-y: auto;
           height: 100vh;
         }
-        .main-content.collapsed { margin-left: 60px; }
+        .main-content.collapsed { margin-left: 12px; }
         .navbar {
           background: white; 
           padding: 15px 25px; 
@@ -262,7 +263,7 @@ const AdminDashboard = () => {
           box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
           position: sticky; 
           top: 0; z-index: 100;
-          user-select:none;
+          // user-select:none;
         }
         .navbar-left {
           font-weight: 700; 
@@ -277,7 +278,8 @@ const AdminDashboard = () => {
           border: none; 
           cursor: pointer; 
           padding: 5px; 
-          color: #444;
+          color: #f8f2f2ff;
+          margin-right:12px;
         }
         .navbar-right {
           display: flex; 
@@ -307,7 +309,7 @@ const AdminDashboard = () => {
           display: flex;
           justify-content: center;
           margin: 20px 25px 30px;
-          user-select:none;
+          // user-select:none;
         }
         .search-bar input {
           width: 300px;
@@ -329,7 +331,7 @@ const AdminDashboard = () => {
           pointer-events: none;
         }
         .kpi-cards {
-        width: 100vw;
+          // width: 100vw;
           display: flex;
           gap: 20px;
           justify-content: space-between;
@@ -337,7 +339,7 @@ const AdminDashboard = () => {
           flex-wrap: wrap;
         }
         .kpi-card {
-        width: 100vw;
+          // width: 100vw;
           flex: 1 1 22%;
           background: white;
           border-radius: 10px;
@@ -471,7 +473,17 @@ const AdminDashboard = () => {
 
       <div className="dashboard-wrapper">
         <nav className={`sidebar ${sidebarOpen ? "" : "collapsed"}`}>
-          <div className="sidebar-header">Admin</div>
+          
+          <div className="sidebar-header" >
+            <button
+                className="sidebar-toggle-btn"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                aria-label="Toggle Sidebar"
+              >
+                <Menu size={24} />
+              </button>
+            AccuBillify</div>
+          
           <div className="sidebar-menu">
             <div
               className={`sidebar-menu-item ${activePage === "customers" ? "active" : ""}`}
@@ -514,13 +526,7 @@ const AdminDashboard = () => {
         <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
           <header className="navbar">
             <div className="navbar-left">
-              <button
-                className="sidebar-toggle-btn"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                aria-label="Toggle Sidebar"
-              >
-                <Menu size={24} />
-              </button>
+              
               Admin Dashboard
             </div>
             <div className="navbar-right">
