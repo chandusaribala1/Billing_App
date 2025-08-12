@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
 import "./Auth.css";
+import "./Login.css";
 
 const Register = () => {
   const [fullName, setFullName] = useState("");
@@ -27,7 +28,7 @@ const Register = () => {
             <FaUser className="input-icon" />
             <input
               type="text"
-              placeholder="Full Name"
+              placeholder="     Full Name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
@@ -38,7 +39,7 @@ const Register = () => {
             <FaEnvelope className="input-icon" />
             <input
               type="email"
-              placeholder="Email"
+              placeholder="     Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -49,7 +50,7 @@ const Register = () => {
             <FaLock className="input-icon" />
             <input
               type="password"
-              placeholder="Password"
+              placeholder="     Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -60,7 +61,7 @@ const Register = () => {
             <FaLock className="input-icon" />
             <input
               type="password"
-              placeholder="Confirm Password"
+              placeholder="     Confirm Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required

@@ -63,7 +63,7 @@
 /* Icon inside input */
 .input-icon {
   position: absolute;
-  top: 50%;
+  top: 35%;
   left: 12px;
   transform: translateY(-50%);
   color: #888;
