@@ -18,19 +18,16 @@ const InvoicePage = () => {
     status: "Pending",
   });
 
-  // Filtered invoices
   const filteredInvoices = invoices.filter(
     (inv) =>
       inv.customer.toLowerCase().includes(search.toLowerCase()) ||
       inv.id.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Handle form input changes
   const handleChange = (e) => {
     setNewInvoice({ ...newInvoice, [e.target.name]: e.target.value });
   };
 
-  // Add new invoice
   const handleAddInvoice = () => {
     if (!newInvoice.id || !newInvoice.customer || !newInvoice.date || !newInvoice.due || !newInvoice.amount) {
       alert("Please fill in all fields.");
@@ -41,7 +38,6 @@ const InvoicePage = () => {
     setShowModal(false);
   };
 
-  // Delete invoice
   const handleDelete = (id) => {
     setInvoices(invoices.filter((inv) => inv.id !== id));
   };
@@ -86,16 +82,15 @@ const InvoicePage = () => {
                 </span>
               </td>
               <td>
-                <button className="view-btn">View</button>
-                <button className="edit-btn">Edit</button>
-                <button className="delete-btn" onClick={() => handleDelete(inv.id)}>Delete</button>
+                <button className="icon-btn view-btn" data-tooltip="View Invoice">View</button>
+                <button className="icon-btn edit-btn" data-tooltip="Edit Invoice">Edit</button>
+                <button className="icon-btn delete-btn" data-tooltip="Delete Invoice" onClick={() => handleDelete(inv.id)}>Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Modal for adding invoice */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
@@ -118,7 +113,6 @@ const InvoicePage = () => {
         </div>
       )}
 
-      {/* Embedded CSS */}
       <style>{`
         .invoice-page { padding: 20px; font-family: Arial, sans-serif; }
         h2 { margin-bottom: 15px; color: #333; }
@@ -132,7 +126,24 @@ const InvoicePage = () => {
         .status.paid { background: green; }
         .status.pending { background: orange; }
         .status.overdue { background: red; }
-        button { margin-right: 5px; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
+        .icon-btn { position: relative; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; }
+        .icon-btn::after {
+          content: attr(data-tooltip);
+          position: absolute;
+          bottom: 125%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #333;
+          color: white;
+          font-size: 0.75em;
+          padding: 4px 6px;
+          border-radius: 4px;
+          opacity: 0;
+          pointer-events: none;
+          white-space: nowrap;
+          transition: opacity 0.2s ease-in-out;
+        }
+        .icon-btn:hover::after { opacity: 1; }
         .view-btn { background: #007bff; color: white; }
         .edit-btn { background: #ffc107; color: black; }
         .delete-btn { background: #dc3545; color: white; }

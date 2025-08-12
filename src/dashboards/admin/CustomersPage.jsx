@@ -8,8 +8,6 @@ import {
   Edit,
   Trash2,
   Eye,
-  FileText,
-  DollarSign,
   Home,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -103,9 +101,14 @@ const CustomerPage = () => {
     }
     .profile-header {
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .profile-left {
+      display: flex;
       align-items: center;
       gap: 15px;
-      margin-bottom: 10px;
     }
     .avatar {
       width: 60px;
@@ -229,59 +232,90 @@ const CustomerPage = () => {
     <>
       <style>{styles}</style>
       <div className="page-container">
-        <div className="header-row">
-          <h2 className="page-title">Customers</h2>
-          <div>
-            <button className="btn btn-gray" onClick={() => navigate("/admin")}>
-              <Home size={16} /> Home
+        {!selectedCustomer ? (
+          <>
+            <div className="header-row">
+              <h2 className="page-title">Customers</h2>
+              <div>
+                <input
+                  className="search-input"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button className="btn btn-blue" style={{ marginLeft: "8px" }} onClick={() => openForm("add")}>
+                  <Plus size={16} /> Add Customer
+                </button>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Outstanding</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCustomers.map((c) => (
+                  <tr key={c.id}>
+                    <td>{c.id}</td>
+                    <td>{c.name}</td>
+                    <td>{c.email}</td>
+                    <td>₹{c.outstandingBalance}</td>
+                    <td>
+                      <span className={`badge ${c.status === "Active" ? "badge-green" : "badge-yellow"}`}>
+                        {c.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button className="icon-btn" data-tooltip="View Profile" onClick={() => setSelectedCustomer(c)}>
+                        <Eye size={18} />
+                      </button>
+                      <button className="icon-btn" data-tooltip="Edit" onClick={() => openForm("edit", c)}>
+                        <Edit size={18} />
+                      </button>
+                      <button className="icon-btn" data-tooltip="Delete" onClick={() => handleDelete(c)}>
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        ) : (
+          <div className="profile-card">
+            <div className="profile-header">
+              <div className="profile-left">
+                <div className="avatar">
+                  <User size={32} style={{ color: "#2563eb" }} />
+                </div>
+                <div>
+                  <h3>{selectedCustomer.name}</h3>
+                  <p>{selectedCustomer.email}</p>
+                </div>
+              </div>
+              <button className="btn btn-gray" onClick={() => navigate("/admin")}>
+                <Home size={16} /> Home
+              </button>
+            </div>
+            <div><Calendar size={16} /> Joined: {selectedCustomer.joined}</div>
+            <div><CreditCard size={16} /> Outstanding: ₹{selectedCustomer.outstandingBalance}</div>
+            <button className="btn btn-blue" style={{ marginTop: "10px" }} onClick={() => openForm("edit", selectedCustomer)}>
+              <Edit size={16} /> Edit Profile
             </button>
-            <input
-              className="search-input"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ marginLeft: "8px" }}
-            />
-            <button className="btn btn-blue" style={{ marginLeft: "8px" }} onClick={() => openForm("add")}>
-              <Plus size={16} /> Add Customer
+            <button className="btn btn-red" style={{ marginTop: "10px", marginLeft: "10px" }} onClick={() => handleDelete(selectedCustomer)}>
+              <Trash2 size={16} /> Delete
+            </button>
+            <button className="btn btn-gray" style={{ marginTop: "10px", marginLeft: "10px" }} onClick={() => setSelectedCustomer(null)}>
+              <ArrowLeft size={16} /> Back
             </button>
           </div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Outstanding</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCustomers.map((c) => (
-              <tr key={c.id}>
-                <td>{c.id}</td>
-                <td>{c.name}</td>
-                <td>{c.email}</td>
-                <td>₹{c.outstandingBalance}</td>
-                <td>
-                  <span className={`badge ${c.status === "Active" ? "badge-green" : "badge-yellow"}`}>
-                    {c.status}
-                  </span>
-                </td>
-                <td>
-                  <button className="icon-btn" data-tooltip="Edit" onClick={() => openForm("edit", c)}>
-                    <Edit size={18} />
-                  </button>
-                  <button className="icon-btn" data-tooltip="Delete" onClick={() => handleDelete(c)}>
-                    <Trash2 size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        )}
       </div>
 
       {/* Add/Edit Customer Modal */}
