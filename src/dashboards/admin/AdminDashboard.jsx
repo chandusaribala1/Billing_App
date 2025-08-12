@@ -1,56 +1,7 @@
 import React, { useState } from "react";
-import {
-  User,
-  Box,
-  FileText,
-  CreditCard,
-  BarChart2,
-  LogOut,
-  UserCircle2,
-  Menu,
-  Search,
-} from "lucide-react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from "recharts";
-
-// Placeholder components for pages — replace with your actual components
-const CustomersPage = () => (
-  <div style={{ padding: 25 }}>
-    <h2>Customers Page</h2>
-    <p>Here you can implement your customers CRUD functionality.</p>
-  </div>
-);
-const ProductsPage = () => (
-  <div style={{ padding: 25 }}>
-    <h2>Products / Services Page</h2>
-    <p>Here you can implement your products/services CRUD functionality.</p>
-  </div>
-);
-const InvoicesPage = () => (
-  <div style={{ padding: 25 }}>
-    <h2>Invoices Page</h2>
-    <p>Here you can implement your invoices CRUD functionality.</p>
-  </div>
-);
-const PaymentsPage = () => (
-  <div style={{ padding: 25 }}>
-    <h2>Payments Page</h2>
-    <p>Here you can implement your payments CRUD functionality.</p>
-  </div>
-);
-const ReportsPage = () => (
-  <div style={{ padding: 25 }}>
-    <h2>Reports Page</h2>
-    <p>Here you can implement your reports and analytics.</p>
-  </div>
-);
+import { User, Box, FileText, CreditCard, BarChart2, LogOut, UserCircle2, Menu, Search } from "lucide-react";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import "./InvoicePage.jsx";
 
 const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -237,21 +188,51 @@ const AdminDashboard = () => {
     <>
       <style>{`
         body, html, #root {
-          margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif;
+          margin: 0; 
+          padding: 0; 
+          height: 100%; 
+          width: 100vw;
+          font-family: Arial, sans-serif;
         }
         .dashboard-wrapper {
-          display: flex; height: 100vh; overflow: hidden;
+          display: flex; 
+          height: 100vh; 
+          overflow: hidden;
         }
         .sidebar {
-          background: #2f3e4d; color: white; width: 240px; flex-shrink: 0; display: flex; flex-direction: column;
+          background: #2f3e4d; 
+          color: white; 
+          width: 240px; 
+          flex-shrink: 0; 
+          display: flex; 
+          flex-direction: column;
           transition: width 0.3s ease;
         }
-        .sidebar.collapsed { width: 60px; }
-        .sidebar-header { padding: 20px; font-size: 1.5rem; text-align: center; border-bottom: 1px solid #3e4e5e; user-select:none; }
-        .sidebar-menu { flex-grow: 1; padding: 10px 0; }
+        .sidebar.collapsed { 
+        width: 60px; 
+        }
+        .sidebar-header { 
+        padding: 20px; 
+        font-size: 1.5rem; 
+        text-align: center; 
+        border-bottom: 1px solid #3e4e5e; 
+        user-select:none; 
+        }
+        .sidebar-menu { 
+        flex-grow: 1; 
+        padding: 10px 0; 
+        }
         .sidebar-menu-item {
-          padding: 12px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: #cfd8dc;
-          font-weight: 500; transition: background-color 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          padding: 12px 20px; 
+          display: flex; 
+          align-items: center; 
+          gap: 12px; cursor: pointer; 
+          color: #cfd8dc;
+          font-weight: 500; 
+          transition: background-color 0.2s; 
+          white-space: nowrap; 
+          overflow: hidden; 
+          text-overflow: ellipsis;
           user-select:none;
         }
         .sidebar-menu-item:hover, .sidebar-menu-item.active {
@@ -269,27 +250,55 @@ const AdminDashboard = () => {
         }
         .main-content.collapsed { margin-left: 60px; }
         .navbar {
-          background: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;
+          background: white; 
+          padding: 15px 25px; 
+          display: flex; 
+          justify-content: space-between; 
+          align-items: center;
           box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
-          position: sticky; top: 0; z-index: 100;
+          position: sticky; 
+          top: 0; z-index: 100;
           user-select:none;
         }
         .navbar-left {
-          font-weight: 700; font-size: 1.5rem; color: #222;
-          display: flex; align-items: center; gap: 10px;
+          font-weight: 700; 
+          font-size: 1.5rem; 
+          color: #222;
+          display: flex; 
+          align-items: center; 
+          gap: 10px;
         }
         .sidebar-toggle-btn {
-          background: none; border: none; cursor: pointer; padding: 5px; color: #444;
+          background: none; 
+          border: none; 
+          cursor: pointer; 
+          padding: 5px; 
+          color: #444;
         }
         .navbar-right {
-          display: flex; align-items: center; gap: 15px; font-weight: 600; color: #555;
+          display: flex; 
+          align-items: center; 
+          gap: 15px; 
+          font-weight: 600; 
+          color: #555;
         }
         .navbar-right button {
-          background: none; border: none; cursor: pointer; color: #555; display: flex; align-items: center; gap: 6px; font-size: 1rem;
-          padding: 6px 12px; border-radius: 6px; transition: background-color 0.2s;
+          background: none; 
+          border: none; 
+          cursor: pointer; 
+          color: #555; 
+          display: flex; 
+          align-items: center; 
+          gap: 6px; 
+          font-size: 1rem;
+          padding: 6px 12px; 
+          border-radius: 6px; 
+          transition: background-color 0.2s;
           user-select:none;
         }
-        .navbar-right button:hover { background-color: #eee; }
+        .navbar-right button:hover { 
+        background-color: #eee; 
+        }
         .search-bar {
           display: flex;
           justify-content: center;
@@ -316,6 +325,7 @@ const AdminDashboard = () => {
           pointer-events: none;
         }
         .kpi-cards {
+        width: 100vw;
           display: flex;
           gap: 20px;
           justify-content: space-between;
@@ -323,6 +333,7 @@ const AdminDashboard = () => {
           flex-wrap: wrap;
         }
         .kpi-card {
+        width: 100vw;
           flex: 1 1 22%;
           background: white;
           border-radius: 10px;
