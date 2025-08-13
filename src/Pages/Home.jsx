@@ -1,5 +1,5 @@
 import React from "react";
-import Navbar from "../Component/Navbar.jsx";
+// import Navbar from "../Component/Navbar.jsx";
 import "./Home.css";
 import { FaUserShield, FaFileInvoiceDollar, FaCreditCard } from "react-icons/fa";
 import { Link } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 const Home = () => {
   return (
     <div className="main">
-      <Navbar />
+      {/* <Navbar /> */}
       <div className="home-container">
         <div className="hero-section">
           <img src="/logo.jpg" alt="App Logo" className="promo-logo" />
