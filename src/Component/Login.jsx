@@ -5,20 +5,23 @@ import "./Login.css";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+  const [role, setRole] = useState("ADMIN"); // ✅ Added role state
+
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
 
   const handleLogin = (e) => {
     e.preventDefault();
-    console.log("Login request", { email, password });
-    // Later: axios.post("/auth/login", { email, password})
+    console.log("Login request", { email, password, role });
+    // Later: axios.post("/auth/login", { email, password, role })
   };
 
   const handlePasswordRecovery = (e) => {
     e.preventDefault();
     console.log("Password recovery request sent to:", recoveryEmail);
-    alert(`If an account exists for ${recoveryEmail}, you will receive password reset instructions.`);
+    alert(
+      `If an account exists for ${recoveryEmail}, you will receive password reset instructions.`
+    );
     setRecoveryEmail("");
     setShowRecovery(false);
   };
@@ -30,9 +33,6 @@ const Login = () => {
           <>
             <h2>Sign In</h2>
             <form onSubmit={handleLogin}>
-            
-              
-
               <input
                 type="email"
                 placeholder="Email"
@@ -47,6 +47,37 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+
+              {/* ✅ Role selection inside login form */}
+              <div className="role-selection">
+                <label>
+                  <input
+                    type="radio"
+                    value="ADMIN"
+                    checked={role === "ADMIN"}
+                    onChange={(e) => setRole(e.target.value)}
+                  />
+                  Admin
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    value="ACCOUNTANT"
+                    checked={role === "ACCOUNTANT"}
+                    onChange={(e) => setRole(e.target.value)}
+                  />
+                  Accountant
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    value="CUSTOMER"
+                    checked={role === "CUSTOMER"}
+                    onChange={(e) => setRole(e.target.value)}
+                  />
+                  Customer
+                </label>
+              </div>
 
               <button type="submit">Login</button>
 

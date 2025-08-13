@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
+import { Link } from "react-router-dom"; // <-- for navigation
 import "./Auth.css";
 import "./Login.css";
 
@@ -8,12 +9,7 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("CUSTOMER");
-  const handleLogin= (e) => {
-    e.preventDefault();
-    console.log("Login request", { email, password, role });
-    // Later: axios.post("/auth/login", { email, password, role })
-  };
+  const [role] = useState("CUSTOMER");
 
   const handleRegister = (e) => {
     e.preventDefault();
@@ -21,7 +17,8 @@ const Register = () => {
       alert("Passwords do not match!");
       return;
     }
-    console.log("Register request", { fullName, email, password });
+    console.log("Register request", { fullName, email, password, role });
+    // axios.post("/auth/register", { fullName, email, password, role })
   };
 
   return (
@@ -29,6 +26,7 @@ const Register = () => {
       <div className="auth-box">
         <h2 className="auth-title">Create an Account</h2>
         <p className="auth-subtitle">Join us and get started in minutes</p>
+
         <form onSubmit={handleRegister} className="auth-form">
           <div className="input-group">
             <FaUser className="input-icon" />
@@ -73,42 +71,18 @@ const Register = () => {
               required
             />
           </div>
-          <div className="role-selection">
-                <label>
-                  <input
-                    type="radio"
-                    value="ADMIN"
-                    checked={role === "ADMIN"}
-                    onChange={(e) => setRole(e.target.value)}
-                  />
-                  Admin
-                </label>
 
-                <label>
-                  <input
-                    type="radio"
-                    value="ACCOUNTANT"
-                    checked={role === "ACCOUNTANT"}
-                    onChange={(e) => setRole(e.target.value)}
-                  />
-                  Accountant
-                </label>
-
-                <label>
-                  <input
-                    type="radio"
-                    value="CUSTOMER"
-                    checked={role === "CUSTOMER"}
-                    onChange={(e) => setRole(e.target.value)}
-                  />
-                  Customer
-                </label>
-              </div>
           <button type="submit" className="auth-button">
             Register
-             <form onSubmit={handleLogin}></form>
           </button>
         </form>
+
+        <p className="auth-subtitle" style={{ marginTop: "15px" }}>
+          Already have an account?{" "}
+          <Link to="/login" className="auth-link">
+            Login here
+          </Link>
+        </p>
       </div>
     </div>
   );

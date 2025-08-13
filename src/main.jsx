@@ -2,13 +2,16 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { BrowserRouter } from 'react-router-dom'
+// import AdminDashboard from './dashboards/admin/AdminDashboard'
 // import AccountantDashboard from './dashboards/accountant/AccountantDashboard'
-import AdminDashboard from './dashboards/admin/AdminDashboard'
+import App from './App';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
-    <AdminDashboard/>
-    </BrowserRouter>
+    {/* <BrowserRouter> */}
+    {/* <AdminDashboard/> */}
+    {/* <AccountantDashboard/> */}
+    <App/>
+    {/* </BrowserRouter> */}
   </StrictMode>,
 )

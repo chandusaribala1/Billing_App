@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 
 const Home = () => {
   return (
+    <div className="root">
     <div className="main">
       {/* <Navbar /> */}
       <div className="home-container">
@@ -44,6 +45,7 @@ const Home = () => {
         </div>
       </div>
     </div>
+  </div>
   );
 };
 

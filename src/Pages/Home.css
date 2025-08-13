@@ -1,8 +1,11 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
 
 .main {
   width: 100vw;
   margin: 0;  
-  
   box-sizing: border-box;
 }
 
@@ -24,6 +27,7 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   /* background-color: #f5f7fa; */
   width: 100vw;
+  height: 100vh;
   background-position: fixed;
 }
 
@@ -36,7 +40,8 @@
 }
 
 .promo-logo {
-  width: 120px;
+  width: 500px;
+  height: 300px;
   margin-bottom: 20px;
 }
 
@@ -145,6 +150,6 @@
   }
 
   .cta-section {
-    padding: 30px 15px;
+    padding: 50px 15px;
   }
 }
