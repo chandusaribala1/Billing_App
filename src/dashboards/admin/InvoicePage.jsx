@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FaEye, FaEdit, FaTrash } from "react-icons/fa"; // Icons
 
 const InvoicePage = () => {
   const [search, setSearch] = useState("");
@@ -82,9 +83,19 @@ const InvoicePage = () => {
                 </span>
               </td>
               <td>
-                <button className="icon-btn view-btn" data-tooltip="View Invoice">View</button>
-                <button className="icon-btn edit-btn" data-tooltip="Edit Invoice">Edit</button>
-                <button className="icon-btn delete-btn" data-tooltip="Delete Invoice" onClick={() => handleDelete(inv.id)}>Delete</button>
+                <button className="icon-btn view-btn" data-tooltip="View Invoice">
+                  <FaEye />
+                </button>
+                <button className="icon-btn edit-btn" data-tooltip="Edit Invoice">
+                  <FaEdit />
+                </button>
+                <button
+                  className="icon-btn delete-btn"
+                  data-tooltip="Delete Invoice"
+                  onClick={() => handleDelete(inv.id)}
+                >
+                  <FaTrash />
+                </button>
               </td>
             </tr>
           ))}
@@ -114,19 +125,71 @@ const InvoicePage = () => {
       )}
 
       <style>{`
-        .invoice-page { padding: 20px; font-family: Arial, sans-serif; }
-        h2 { margin-bottom: 15px; color: #333; }
-        .actions { display: flex; justify-content: space-between; margin-bottom: 15px; }
-        .search-input { padding: 8px; width: 250px; border: 1px solid #ccc; border-radius: 5px; }
-        .add-btn { background: green; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; }
-        .invoice-table { width: 100%; border-collapse: collapse; }
-        .invoice-table th, .invoice-table td { border: 1px solid #ddd; padding: 10px; }
-        .invoice-table th { background: #f4f4f4; }
-        .status { padding: 5px 10px; border-radius: 4px; color: white; font-size: 0.9em; }
-        .status.paid { background: green; }
-        .status.pending { background: orange; }
-        .status.overdue { background: red; }
-        .icon-btn { position: relative; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; }
+        .invoice-page { 
+        padding: 20px; 
+        font-family: Arial, sans-serif; 
+        }
+        h2 { 
+        margin-bottom: 15px; 
+        color: #333; 
+        }
+        .actions { 
+        display: flex; 
+        justify-content: space-between; 
+        margin-bottom: 15px; 
+        }
+        .search-input { 
+        padding: 8px; 
+        width: 250px; 
+        border: 1px solid #ccc; 
+        border-radius: 5px; 
+        }
+        .add-btn { 
+        background: green; 
+        color: white; 
+        padding: 8px 12px; 
+        border: none; 
+        border-radius: 4px; 
+        cursor: pointer; 
+        }
+        .invoice-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        }
+        .invoice-table th, .invoice-table td { 
+        border: 1px solid #ddd; 
+        padding: 10px; 
+        text-align: center; 
+        }
+        .invoice-table th { 
+        background: #f4f4f4; 
+        }
+        .status { 
+        padding: 5px 10px; 
+        border-radius: 4px; 
+        color: white; 
+        font-size: 0.9em; 
+        }
+        .status.paid { 
+        background: green; 
+        }
+        .status.pending { 
+        background: orange; 
+        }
+        .status.overdue { 
+        background: red; 
+        }
+        .icon-btn { 
+        position: relative; 
+        border: none; 
+        border-radius: 4px; 
+        padding: 6px; 
+        cursor: pointer; 
+        font-size: 16px; 
+        }
+        .icon-btn svg { 
+        pointer-events: none; 
+        }
         .icon-btn::after {
           content: attr(data-tooltip);
           position: absolute;
@@ -143,16 +206,59 @@ const InvoicePage = () => {
           white-space: nowrap;
           transition: opacity 0.2s ease-in-out;
         }
-        .icon-btn:hover::after { opacity: 1; }
-        .view-btn { background: #007bff; color: white; }
-        .edit-btn { background: #ffc107; color: black; }
-        .delete-btn { background: #dc3545; color: white; }
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; }
-        .modal { background: white; padding: 20px; border-radius: 8px; width: 300px; display: flex; flex-direction: column; gap: 10px; }
-        .modal input, .modal select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
-        .save-btn { background: green; color: white; }
-        .cancel-btn { background: gray; color: white; }
+        .icon-btn:hover::after { 
+        opacity: 1; 
+        }
+        .view-btn { 
+        background: #007bff; 
+        color: white; 
+        }
+        .edit-btn { 
+        background: #ffc107; 
+        color: black; 
+        }
+        .delete-btn { 
+        background: #dc3545; 
+        color: white; 
+        }
+        .modal-overlay { 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        right: 0; 
+        bottom: 0; 
+        background: rgba(0,0,0,0.5); 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        }
+        .modal { 
+        background: white; 
+        padding: 20px; 
+        border-radius: 8px; 
+        width: 300px; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 10px; 
+        }
+        .modal input, .modal select { 
+        padding: 8px; 
+        border: 1px solid #ccc; 
+        border-radius: 4px; 
+        }
+        .modal-actions { 
+        display: flex; 
+        justify-content: flex-end; 
+        gap: 10px; 
+        }
+        .save-btn { 
+        background: green; 
+        color: white; 
+        }
+        .cancel-btn { 
+        background: gray; 
+        color: white; 
+        }
       `}</style>
     </div>
   );

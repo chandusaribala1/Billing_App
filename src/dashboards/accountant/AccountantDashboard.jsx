@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import InvoicesPage from "./InvoicesPage.jsx";
@@ -46,7 +45,7 @@ const AccountantDashboard = () => {
           display: flex;
           flex-direction: column;
           height: 100vh;
-          width:100vw;
+          width: 100vw;
           font-family: Arial, sans-serif;
         }
         .navbar {
