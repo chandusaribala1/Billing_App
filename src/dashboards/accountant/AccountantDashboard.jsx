@@ -91,6 +91,21 @@ const AccountantDashboard = () => {
           padding: 20px;
           background-color: #ecf0f1;
         }
+        .icon {
+          margin-right: 8px;
+          cursor: pointer;
+          font-size: 18px;
+        }
+        .edit-icon {
+          color: #28a745; /* Green */
+        }
+        .delete-icon {
+          color: #dc3545; /* Red */
+        }
+        .download-icon {
+          color: black; /* Plain black for download */
+        }
+
       `}</style>
     </div>
   );
