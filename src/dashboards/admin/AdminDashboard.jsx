@@ -204,7 +204,7 @@ const AdminDashboard = () => {
           overflow: hidden;
         }
         .sidebar {
-          background: #2f3e4d; 
+           background: linear-gradient(125deg, #e374f4, #aa1bed, #844582, #a6dff4);
           color: white; 
           width: 240px; 
           flex-shrink: 0; 
@@ -274,7 +274,8 @@ const AdminDashboard = () => {
           gap: 10px;
         }
         .sidebar-toggle-btn {
-          background: none; 
+        
+          background: fixed; 
           border: none; 
           cursor: pointer; 
           padding: 5px; 
@@ -326,7 +327,7 @@ const AdminDashboard = () => {
         .search-bar svg {
           position: relative;
           left: -30px;
-          top: 3px;
+          top: 10px;
           color: #888;
           pointer-events: none;
         }
@@ -482,7 +483,7 @@ const AdminDashboard = () => {
               >
                 <Menu size={24} />
               </button>
-            AccuBillify</div>
+           </div>
           
           <div className="sidebar-menu">
             <div

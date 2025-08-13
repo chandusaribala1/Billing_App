@@ -145,7 +145,7 @@ const InvoicePage = () => {
         border-radius: 5px; 
         }
         .add-btn { 
-        background: green; 
+        background:blue; 
         color: white; 
         padding: 8px 12px; 
         border: none; 
@@ -171,13 +171,16 @@ const InvoicePage = () => {
         font-size: 0.9em; 
         }
         .status.paid { 
-        background: green; 
+        background: none;
+        color:black; 
         }
         .status.pending { 
-        background: orange; 
+         background: none;
+        color:black; 
         }
         .status.overdue { 
-        background: red; 
+         background: none;
+        color:black;  
         }
         .icon-btn { 
         position: relative; 
@@ -210,16 +213,16 @@ const InvoicePage = () => {
         opacity: 1; 
         }
         .view-btn { 
-        background: #007bff; 
-        color: white; 
+        background: white; 
+        color:blue; 
         }
         .edit-btn { 
-        background: #ffc107; 
-        color: black; 
+        background: white; 
+        color: green; 
         }
         .delete-btn { 
-        background: #dc3545; 
-        color: white; 
+        background: white; 
+        color: red; 
         }
         .modal-overlay { 
         position: fixed; 

@@ -97,11 +97,11 @@ const ProductsPage = () => {
     .action-btn {
       background: none;
       border: none;
-      color: #2563eb;
+      color:black;
       cursor: pointer;
     }
     .message {
-      padding: 8px;
+      padding: 10px;
       background-color: #dbeafe;
       color: #1e40af;
       text-align: center;
