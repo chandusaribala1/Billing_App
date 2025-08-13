@@ -101,7 +101,7 @@ const ProductsPage = () => {
       cursor: pointer;
     }
     .message {
-      padding: 10px;
+      padding: 8px;
       background-color: #dbeafe;
       color: #1e40af;
       text-align: center;
