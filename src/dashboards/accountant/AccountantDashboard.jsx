@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
+import { Menu } from "lucide-react";
 import InvoicesPage from "./InvoicesPage.jsx";
 import PaymentsPage from "./PaymentsPage.jsx";
 import ReportsPage from "./ReportsPage.jsx";
 
 const AccountantDashboard = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   const links = [
     { name: "Invoices", path: "invoices" },
     { name: "Payments", path: "payments" },
@@ -12,25 +15,40 @@ const AccountantDashboard = () => {
   ];
 
   return (
-    <div className="dashboard-container">
-     
-      <nav className="navbar">
-        <h2 className="navbar-title">Accountant Dashboard</h2>
-        <div className="navbar-links">
-          <Link to="/">Home</Link>
-          <Link to="/logout">Logout</Link>
+    <div className="dashboard-wrapper">
+      {/* Sidebar */}
+      <nav className={`sidebar ${sidebarOpen ? "" : "collapsed"}`}>
+        <div className="sidebar-header">
+          <button
+            className="sidebar-toggle-btn"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label="Toggle Sidebar"
+          >
+            <Menu size={24} />
+          </button>
+        </div>
+        <div className="sidebar-menu">
+          {links.map((link, index) => (
+            <Link
+              key={index}
+              to={link.path}
+              className="sidebar-menu-item"
+            >
+              <span>{link.name}</span>
+            </Link>
+          ))}
         </div>
       </nav>
 
-      <div className="main-content">
-       
-        <aside className="sidebar">
-          {links.map((link, index) => (
-            <Link key={index} to={link.path} className="sidebar-link">
-              {link.name}
-            </Link>
-          ))}
-        </aside>
+      {/* Main Content */}
+      <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
+        <header className="navbar">
+          <div className="navbar-left">Accountant Dashboard</div>
+          <div className="navbar-right">
+            <Link to="/">Home</Link>
+            <Link to="/logout">Logout</Link>
+          </div>
+        </header>
 
         <div className="page-content">
           <Routes>
@@ -39,73 +57,130 @@ const AccountantDashboard = () => {
             <Route path="reports" element={<ReportsPage />} />
           </Routes>
         </div>
-      </div>
+      </main>
+
+      {/* Styles */}
       <style>{`
-        .dashboard-container {
+        .dashboard-wrapper {
+          width:100vw;
           display: flex;
-          flex-direction: column;
           height: 100vh;
-          width: 100vw;
           font-family: Arial, sans-serif;
         }
+
+        /* Sidebar styling like AdminDashboard */
+        .sidebar {
+          background: linear-gradient(125deg, #e374f4, #aa1bed, #844582, #a6dff4);
+          color: white;
+          width: 240px;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          transition: width 0.3s ease;
+        }
+        .sidebar.collapsed {
+          width: 60px;
+        }
+        .sidebar-header {
+          padding: 20px;
+          text-align: center;
+          border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .sidebar-toggle-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: white;
+        }
+        .sidebar-menu {
+          flex-grow: 1;
+        }
+        .sidebar-menu-item {
+          padding: 12px 20px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: #f1f1f1;
+          text-decoration: none;
+          transition: background-color 0.2s;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .sidebar-menu-item:hover {
+          background: rgba(0,0,0,0.2);
+        }
+        .sidebar.collapsed .sidebar-menu-item span {
+          display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+          flex-grow: 1;
+          background: #f4f6f8;
+          overflow-y: auto;
+          height: 100vh;
+          transition: margin-left 0.3s;
+        }
+        .main-content.collapsed {
+          margin-left: 12px;
+        }
+
+        /* Navbar styling like AdminDashboard */
         .navbar {
+          background: white;
+          padding: 15px 25px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 10px 20px;
-          background-color: #2c3e50;
-          color: white;
+          box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+          position: sticky;
+          top: 0;
+          z-index: 100;
         }
-        .navbar-title {
-          margin: 0;
+        .navbar-left {
+          font-weight: 700;
+          font-size: 1.5rem;
+          color: #222;
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
-        .navbar-links a {
+        .navbar-right a {
           margin-left: 20px;
-          color: white;
+          color: #555;
           text-decoration: none;
+          font-weight: 600;
         }
-        .navbar-links a:hover {
-          text-decoration: underline;
-        }
-        .main-content {
-          display: flex;
-          flex: 1;
-        }
-        .sidebar {
-          width: 200px;
-          background-color: #34495e;
-          padding-top: 20px;
-          display: flex;
-          flex-direction: column;
-        }
-        .sidebar-link {
-          padding: 12px 20px;
-          color: white;
-          text-decoration: none;
-        }
-        .sidebar-link:hover {
-          background-color: #3d566e;
-        }
-        .page-content {
-          flex: 1;
-          padding: 20px;
-          background-color: #ecf0f1;
-        }
-        .icon {
-          margin-right: 8px;
-          cursor: pointer;
-          font-size: 18px;
-        }
-        .edit-icon {
-          color: #28a745; /* Green */
-        }
-        .delete-icon {
-          color: #dc3545; /* Red */
-        }
-        .download-icon {
-          color: black; /* Plain black for download */
+        .navbar-right a:hover {
+          background-color: #eee;
+          padding: 6px 10px;
+          border-radius: 6px;
         }
 
+        /* Page Content */
+        .page-content {
+          padding: 20px;
+        }
+
+        /* Responsive behavior */
+        @media (max-width: 900px) {
+          .sidebar {
+            position: fixed;
+            z-index: 1000;
+            height: 100%;
+            left: 0;
+            top: 0;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+          }
+          .sidebar.open {
+            transform: translateX(0);
+          }
+          .main-content {
+            margin-left: 0 !important;
+          }
+        }
       `}</style>
     </div>
   );
