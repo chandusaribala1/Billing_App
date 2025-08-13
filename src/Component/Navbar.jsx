@@ -6,8 +6,8 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="nav-left">
-        <img src="/logo.png" alt="Logo" className="logo" />
-        <span className="app-name">AccuBillify</span>
+        <img src="/logo.jpg" alt="Logo" className="logo" />
+        {/* <span className="app-name">AccuBillify</span> */}
       </div>
       <div className="nav-right">
         <Link to="/login">Sign In</Link>

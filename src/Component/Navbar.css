@@ -1,5 +1,5 @@
 .navbar {
-  background-color: #004aad;
+  background-color: #8f15dbbd;
   color: white;
   display: flex;
   justify-content: space-between;
@@ -13,13 +13,16 @@
 
 .app-name {
   font-weight: bold;
-  font-size: 18px;
+  font-size: 15px;
+  
+  
 }
 
 .nav-right a {
   color: white;
   margin-left: 15px;
   text-decoration: none;
+ 
 }
 
 .nav-right a:hover {

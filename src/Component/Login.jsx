@@ -5,14 +5,14 @@ import "./Login.css";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("CUSTOMER");
+  
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
 
   const handleLogin = (e) => {
     e.preventDefault();
-    console.log("Login request", { email, password, role });
-    // Later: axios.post("/auth/login", { email, password, role })
+    console.log("Login request", { email, password });
+    // Later: axios.post("/auth/login", { email, password})
   };
 
   const handlePasswordRecovery = (e) => {
@@ -31,37 +31,7 @@ const Login = () => {
             <h2>Sign In</h2>
             <form onSubmit={handleLogin}>
             
-              <div className="role-selection">
-                <label>
-                  <input
-                    type="radio"
-                    value="ADMIN"
-                    checked={role === "ADMIN"}
-                    onChange={(e) => setRole(e.target.value)}
-                  />
-                  Admin
-                </label>
-
-                <label>
-                  <input
-                    type="radio"
-                    value="ACCOUNTANT"
-                    checked={role === "ACCOUNTANT"}
-                    onChange={(e) => setRole(e.target.value)}
-                  />
-                  Accountant
-                </label>
-
-                <label>
-                  <input
-                    type="radio"
-                    value="CUSTOMER"
-                    checked={role === "CUSTOMER"}
-                    onChange={(e) => setRole(e.target.value)}
-                  />
-                  Customer
-                </label>
-              </div>
+              
 
               <input
                 type="email"
