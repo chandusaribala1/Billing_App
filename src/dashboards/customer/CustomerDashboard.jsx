@@ -3,7 +3,7 @@ import Sidebar from "../../Component/Sidebar.jsx";
 import { Routes, Route } from "react-router-dom";
 import MyInvoicesPage from "./MyInvoicesPage.jsx";
 import MyPaymentsPage from "./MyPaymentsPage.jsx";
-import ProfilePage from "./ProfilePage.jsx";
+import CustomerProfile from  "./CustomerProfile.jsx";
 
 const CustomerDashboard = () => {
   const links = [
@@ -19,7 +19,7 @@ const CustomerDashboard = () => {
         <Routes>
           <Route path="invoices" element={<MyInvoicesPage />} />
           <Route path="payments" element={<MyPaymentsPage />} />
-          <Route path="profile" element={<ProfilePage />} />
+          <Route path="profile" element={<CustomerProfile />} />
         </Routes>
       </div>
     </div>
