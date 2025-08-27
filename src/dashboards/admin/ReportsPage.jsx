@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { BarChart2, FileText, Users, DollarSign, Briefcase } from 'lucide-react';
-
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+  Legend
+} from 'recharts';
 const ReportsPage = () => {
   const styles = `
     body {
@@ -92,14 +102,56 @@ const ReportsPage = () => {
   `;
 
   const [message, setMessage] = useState(null);
+  const [reportData, setReportData] = useState(null);
+  const [reportType, setReportType] = useState(null);
+  const handleGenerateReport = async (reportType) => {
+  setMessage(`Generating ${reportType} report...`);
+  setReportData(null);
 
-  const handleGenerateReport = (reportType) => {
-    setMessage(`Generating ${reportType} report...`);
-    setTimeout(() => {
-      setMessage(`'${reportType}' report generated successfully!`);
-      setTimeout(() => setMessage(null), 3000);
-    }, 2000);
+  try {
+    const token = localStorage.getItem("token");
+    let res;
+
+    if (reportType === "Sales Summary") {
+      const from = "2025-08-01";
+      const to = "2025-08-31";
+      res = await axios.get(
+        `http://localhost:8080/reports/invoices?from=${from}&to=${to}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } else if (reportType === "Customer") {
+      res = await axios.get(`http://localhost:8080/reports/customer/1`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } else if (reportType === "Invoices") {
+      const month = "2025-08";
+      res = await axios.get(
+        `http://localhost:8080/reports/invoices/monthly?month=${month}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } else if (reportType === "Products") {
+      res = { data: [{ name: "Product A", value: 120 }, { name: "Product B", value: 80 }] }; 
+      // mocked data
+    }
+
+    // Normalize data for recharts
+    const formatted =
+      Array.isArray(res.data)
+        ? res.data
+        : res.data.data
+        ? res.data.data
+        : [res.data];
+
+    setReportData(formatted);
+    setMessage(`'${reportType}' report generated successfully!`);
+  } catch (err) {
+    console.error(err);
+    setMessage(`Failed to generate ${reportType} report`);
+  }
+
+  setTimeout(() => setMessage(null), 3000);
   };
+
 
   return (
     <>
@@ -113,7 +165,7 @@ const ReportsPage = () => {
         </div>
 
         {message && <div className="message">{message}</div>}
-
+        
         <div className="grid">
           {/* Sales Summary */}
           <div className="card">
@@ -155,6 +207,24 @@ const ReportsPage = () => {
             </button>
           </div>
         </div>
+        {reportData && (
+          <div style={{ width: "100%", height: 300, marginBottom: "20px", background: "#fff", padding: "12px", borderRadius: "8px" }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={reportData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey={
+                  reportType === "Sales Summary" ? "date" :
+                  reportType === "Customer" ? "customerName" :
+                  reportType === "Invoices" ? "month" :"name"  // fallback (Products etc.)
+                  } />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#4f46e5" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
     </>
   );

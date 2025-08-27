@@ -1,8 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Briefcase, Plus, Edit, Trash2 } from 'lucide-react';
+import api from "../../Services/axios";
 
-const ProductsPage = () => {
-  // CSS styles inside the same file (no Tailwind)
+function ProductsPage ()  {
+  const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    category: "",
+    price: "",
+    stock: "",
+  });
+  const [editingProduct, setEditingProduct] = useState(null);
+
+  // 🔹 Fetch products on load
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+  const fetchProducts = async () => {
+    try {
+      const res = await api.get("/products");
+      setProducts(res.data);
+    } catch (err) {
+      console.error("Error fetching products", err);
+    }
+  };
   const styles = `
     body {
       font-family: 'Inter', sans-serif;
@@ -201,37 +226,54 @@ const ProductsPage = () => {
       background-color: #b91c1c;
     }
   `;
+   // 🔹 Handle form input
+  const handleInputChange = (e) => {
+    setFormData({ ...formData,
+      [e.target.name]: e.target.value ,
+    });
+  };
 
-  // Mock data
-  const initialProducts = [
-    { id: 'PROD-001', name: 'Web Hosting Service (Basic)', category: 'Service', price: 50.00, stock: null },
-    { id: 'PROD-002', name: 'Domain Registration', category: 'Service', price: 15.00, stock: null },
-    { id: 'PROD-003', name: 'Custom Website Design', category: 'Service', price: 1500.00, stock: null },
-    { id: 'PROD-004', name: 'Office 365 License', category: 'Software', price: 10.00, stock: 500 },
-    { id: 'PROD-005', name: 'Server Maintenance Plan', category: 'Service', price: 200.00, stock: null },
-  ];
+  // 🔹 Add / Update Product
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
 
-  const [products, setProducts] = useState(initialProducts);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [productToDelete, setProductToDelete] = useState(null);
-
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
+    try {
+      if (editingProduct) {
+        // Update
+        await api.put(`/products/${editingProduct.id}`, formData);
+      } else {
+        // Create
+        await api.post("/products", formData);
+      }
+      setShowFormModal(false);
+      setEditingProduct(null);
+      setFormData({ name: "", category: "", price: "", stock: "" });
+      fetchProducts();
+    } catch (err) {
+      console.error("Error saving product", err);
+    }
+  };
+  
   const handleDeleteClick = (product) => {
     setProductToDelete(product);
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
-    setProducts(products.filter(p => p.id !== productToDelete.id));
-    setShowDeleteModal(false);
-    setProductToDelete(null);
+  const confirmDelete = async() => {
+    try {
+      await api.delete(`/products/${productToDelete.id}`);
+      setShowDeleteModal(false);
+      setProductToDelete(null);
+      fetchProducts();
+    } catch (err) {
+      console.error("Error deleting product", err);
+    }
   };
+  // ✅ Filter products
+  const filteredProducts = products.filter((p) =>
+  (p.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+);
+
 
   return (
     <>
@@ -249,12 +291,78 @@ const ProductsPage = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
             />
-            <button className="btn-primary">
+            {/* <button className="btn-primary">
               <Plus size={16} className="btn-icon" /> New Product
-            </button>
+            </button> */}
           </div>
         </div>
+        {/* Add / Edit Product Modal */}
+        {showFormModal && (
+          <div className="modal-overlay">
+          <div className="modal-content">
+          <h4 className="modal-title">
+          {editingProduct ? "Edit Product" : "Add New Product"}
+          </h4>
 
+          <form onSubmit={handleFormSubmit} className="modal-form">
+            <input
+            type="text"
+            name="name"
+            value={formData.name}
+          onChange={handleInputChange}
+          placeholder="Product Name"
+          required
+        />
+        <input
+          type="text"
+          name="category"
+          value={formData.category}
+          onChange={handleInputChange}
+          placeholder="Category"
+          required
+        />
+        <input
+          type="number"
+          name="price"
+          value={formData.price}
+          onChange={handleInputChange}
+          placeholder="Price"
+          required
+        />
+        {/* <input
+          type="number"
+          name="stock"
+          value={formData.stock}
+          onChange={handleInputChange}
+          placeholder="Stock"
+        /> */}
+
+        <div className="modal-actions">
+          <button
+            type="button"
+            onClick={() => setShowFormModal(false)}
+            className="btn-cancel"
+          >
+            Cancel
+          </button>
+          <button type="submit" className="btn-primary">
+            {editingProduct ? "Update" : "Add"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+<button
+  className="btn-primary"
+  onClick={() => {
+    setFormData({ name: "", category: "", price: "", stock: "" });
+    setEditingProduct(null);
+    setShowFormModal(true);
+  }}
+>
+  <Plus size={16} className="btn-icon" /> New Product
+</button>
         <div className="table-container">
           <table>
             <thead>
@@ -263,7 +371,7 @@ const ProductsPage = () => {
                 <th>Name</th>
                 <th>Category</th>
                 <th>Price (₹)</th>
-                <th>Stock</th>
+                {/* <th>Stock</th> */}
                 <th>Actions</th>
               </tr>
             </thead>
@@ -275,12 +383,25 @@ const ProductsPage = () => {
                     <td>{product.name}</td>
                     <td>{product.category}</td>
                     <td>{product.price.toFixed(2)}</td>
-                    <td>{product.stock !== null ? product.stock : 'N/A'}</td>
+                    {/* <td>{product.stock !== undefined && product.stock !== null ? product.stock : "N/A"}</td> */}
                     <td>
                       <div className="action-buttons">
-                        <button className="btn-edit">
-                          <Edit size={16} />
-                        </button>
+                        <button
+                          className="btn-edit"
+                          onClick={() => {
+                          setFormData({
+                          name: product.name || "",
+                          category: product.category || "",
+                          price: product.price || "",
+                          // stock: product.stock ?? "",
+                        });
+                        setEditingProduct(product);
+                        setShowFormModal(true);
+                        }}
+                        >
+                        <Edit size={16} />
+                      </button>
+
                         <button onClick={() => handleDeleteClick(product)} className="btn-delete">
                           <Trash2 size={16} />
                         </button>

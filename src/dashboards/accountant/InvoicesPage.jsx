@@ -1,203 +1,371 @@
-import React, { useState, useEffect } from "react";
-import { Pencil, Trash2, Download } from "lucide-react"; // outline icons
-import { FaEdit } from "react-icons/fa";
-
-const InvoicesPage = () => {
-  const [invoices, setInvoices] = useState([
-    { id: 1, customer: "John Doe", date: "2025-08-01", dueDate: "2025-08-10", amount: 250.0, status: "Paid" },
-    { id: 2, customer: "Jane Smith", date: "2025-08-05", dueDate: "2025-08-12", amount: 120.5, status: "Pending" },
-    { id: 3, customer: "Acme Corp", date: "2025-08-08", dueDate: "2025-08-15", amount: 980.75, status: "Pending" }
-  ]);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [message, setMessage] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [editingInvoice, setEditingInvoice] = useState(null);
-  const [formData, setFormData] = useState({
-    customer: "",
-    date: new Date().toISOString().slice(0, 10),
-    dueDate: new Date().toISOString().slice(0, 10),
+import React, { useState,useEffect } from "react";
+import { FaEye, FaEdit, FaTrash } from "react-icons/fa"; // Icons
+import api from "../../Services/axios";
+const InvoicePage = () => {
+  const [search, setSearch] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [newInvoice, setNewInvoice] = useState({
+    customerId: "",
+    due: "",
     amount: "",
-    status: "Pending"
+    status: "UNPAID",
   });
-
   useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    setInvoices(prev =>
-      prev.map(inv =>
-        inv.status !== "Paid" && inv.dueDate < today
-          ? { ...inv, status: "Overdue" }
-          : inv
-      )
-    );
-  }, []);
-
-  const filteredInvoices = invoices.filter(inv =>
-    inv.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inv.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inv.date.includes(searchTerm) ||
-    inv.dueDate.includes(searchTerm) ||
-    inv.amount.toString().includes(searchTerm)
-  );
-
-  const handleAddInvoice = () => {
-    setShowForm(true);
-    setEditingInvoice(null);
-    setFormData({
-      customer: "",
-      date: new Date().toISOString().slice(0, 10),
-      dueDate: new Date().toISOString().slice(0, 10),
-      amount: "",
-      status: "Pending"
-    });
-  };
-
-  const handleSave = () => {
-    if (!formData.customer || isNaN(formData.amount) || formData.amount <= 0) {
-      setMessage("Please enter valid customer name and amount.");
-      setTimeout(() => setMessage(null), 3000);
-      return;
+  const fetchInvoices = async () => {
+    try {
+      const res = await api.get("/invoices");
+      console.log("Fetched invoices:", res.data);
+      setInvoices(res.data);
+    } catch (err) {
+      console.error("Error fetching invoices:", err);
+    } finally {
+      setLoading(false);
     }
-    if (editingInvoice) {
-      setInvoices(invoices.map(inv => inv.id === editingInvoice.id ? { ...formData, id: inv.id, amount: parseFloat(formData.amount) } : inv));
-      setMessage(`Invoice #${editingInvoice.id} updated successfully.`);
+  };
+  fetchInvoices();
+}, []);
+
+  // const filteredInvoices = invoices.filter(
+  //   (inv) =>
+  //     inv.customer.toLowerCase().includes(search.toLowerCase()) ||
+  //     inv.id.toLowerCase().includes(search.toLowerCase())
+  // );
+
+  const handleChange = (e) => {
+    setNewInvoice({ ...newInvoice, [e.target.name]: e.target.value });
+  };
+const handleSaveInvoice = async () => {
+  try {
+    const payload = {
+      customerId: newInvoice.customerId,
+      dueDate: newInvoice.due,
+      status: newInvoice.status,
+      amount: newInvoice.amount,  // ✅ include amount
+      description: "Created via frontend", // ✅ optional, add field if needed
+      items: [
+        {
+          productId: 1, // ⚠️ later replace with dynamic product picker
+          quantity: 1,
+          unitPrice: newInvoice.amount,
+        },
+      ],
+    };
+
+    let res;
+    if (editingId) {
+      res = await api.put(`/invoices/${editingId}`, payload);
+      setInvoices(invoices.map((inv) => (inv.id === editingId ? res.data : inv)));
     } else {
-      const newId = invoices.length ? Math.max(...invoices.map(i => i.id)) + 1 : 1;
-      setInvoices([...invoices, { ...formData, id: newId, amount: parseFloat(formData.amount) }]);
-      setMessage("New invoice added successfully.");
+      res = await api.post("/invoices", payload);
+      setInvoices([...invoices, res.data]);
     }
-    setShowForm(false);
-    setTimeout(() => setMessage(null), 3000);
-  };
 
-  const handleEdit = (invoice) => {
-    setEditingInvoice(invoice);
-    setFormData({ ...invoice });
-    setShowForm(true);
-  };
-
-  const handleDelete = (id) => {
-    setInvoices(invoices.filter(inv => inv.id !== id));
-    setMessage(`Invoice #${id} deleted successfully.`);
-    setTimeout(() => setMessage(null), 3000);
-  };
-
-  const handleDownload = (id) => {
-    setMessage(`Downloading invoice #${id}...`);
-    setTimeout(() => {
-      setMessage(`Invoice #${id} download complete.`);
-      setTimeout(() => setMessage(null), 3000);
-    }, 1500);
-  };
-
-  const exportCSV = () => {
-    const headers = ["ID,Customer,Date,Due Date,Amount,Status"];
-    const rows = invoices.map(inv => `${inv.id},${inv.customer},${inv.date},${inv.dueDate},${inv.amount},${inv.status}`);
-    const csvContent = [headers, ...rows].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "invoices_report.csv";
-    a.click();
-  };
+    // reset form
+    setShowModal(false);
+    setEditingId(null);
+    setNewInvoice({ customerId: "", due: "", amount: "", status: "UNPAID" });
+  } catch (err) {
+    console.error("Error saving invoice:", err.response?.data || err.message);
+  }
+};
 
   return (
-    <div className="container">
-      <div className="header-section">
-        <h1>Invoices</h1>
-        <div className="header-actions">
-          <input
-            type="text"
-            placeholder="Search invoices..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-          <button className="add-button" onClick={handleAddInvoice}>Add Invoice</button>
-          <button className="export-button" onClick={exportCSV}>Export CSV</button>
-        </div>
+    <div className="invoice-page">
+      <h2>Invoices</h2>
+      <div className="actions">
+        <input
+          type="text"
+          placeholder="Search invoices..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="search-input"
+        />
+        <button className="add-btn" onClick={() => setShowModal(true)}>+ Add Invoice</button>
       </div>
 
-      {message && <div className="message-box">{message}</div>}
-
-      {showForm && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>{editingInvoice ? `Edit Invoice #${editingInvoice.id}` : "Add New Invoice"}</h3>
-            <input type="text" placeholder="Customer Name" value={formData.customer} onChange={(e) => setFormData({ ...formData, customer: e.target.value })} />
-            <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
-            <input type="date" value={formData.dueDate} onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })} />
-            <input type="number" placeholder="Amount" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
-            <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
-              <option value="Paid">Paid</option>
-              <option value="Partially Paid">Partially Paid</option>
-              <option value="Pending">Pending</option>
-              <option value="Overdue">Overdue</option>
-            </select>
-            <div className="button-group">
-              <button className="save-button" onClick={handleSave}>Save</button>
-              <button className="cancel-button" onClick={() => setShowForm(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <table>
+      <table className="invoice-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>Invoice ID</th>
             <th>Customer</th>
-            <th>Date</th>
+            <th>Created Date</th>
             <th>Due Date</th>
             <th>Amount</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
-          {filteredInvoices.map((inv) => (
-            <tr key={inv.id}>
-              <td>{inv.id}</td>
-              <td>{inv.customer}</td>
-              <td>{inv.date}</td>
-              <td>{inv.dueDate}</td>
-              <td>₹{inv.amount.toFixed(2)}</td>
-              <td className="status-text">{inv.status}</td>
-              <td>
-                <FaEdit title="Edit Invoice" className="icon edit-icon" onClick={() => handleEdit(inv)} />
-                <Trash2 title="Delete Invoice" className="icon delete-icon" onClick={() => handleDelete(inv.id)} />
-                <Download title="Download Invoice" className="icon download-icon" onClick={() => handleDownload(inv.id)} />
+          {loading ? (
+            <tr>
+              <td colSpan="7" style={{ textAlign: "center" }}>
+                Loading...
               </td>
             </tr>
-          ))}
+          ) : invoices.length > 0 ? (
+            invoices
+              .filter(
+                (inv) =>
+                  inv.customer?.name
+                    ?.toLowerCase()
+                    .includes(search.toLowerCase()) ||
+                  inv.id.toString().includes(search)
+              )
+              .map((inv) => (
+                <tr key={inv.id}>
+                  <td>{`INV${inv.id.toString().padStart(3, "0")}`}</td>
+                  <td>{inv.customer?.name || "N/A"}</td>
+                  <td>{inv.createdDate}</td>
+                  <td>{inv.dueDate}</td>
+                  <td>{Number(inv.totalAmount).toFixed(2)}</td>
+                  <td>
+                  <span
+                    className={`status ${
+                    inv.status === "PAID"? "paid"
+                    : inv.status === "UNPAID"? "unpaid"
+                    : inv.status === "PARTIALLY_PAID"? "partial"
+                    : ""
+                    }`}>
+                    {inv.status}
+                  </span>
+                  </td>
+
+                  <td>
+                    
+                    <button
+  className="icon-btn edit-btn"
+  data-tooltip="Edit Invoice"
+  onClick={() => {
+    setNewInvoice({
+      customerId: inv.customer?.id || "",
+      due: inv.dueDate?.split("T")[0] || "",
+      amount: inv.totalAmount,
+      status: inv.status,
+    });
+    setShowModal(true);
+    setEditingId(inv.id); // 👈 store which invoice we are editing
+  }}
+>
+  <FaEdit />
+</button>
+
+                    <button
+                      className="icon-btn delete-btn"
+                      data-tooltip="Delete Invoice"
+                      onClick={() => handleDelete(inv.id)}
+                    >
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              ))
+          ) : (
+            <tr>
+              <td colSpan="7" style={{ textAlign: "center" }}>
+                No invoices found.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
 
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Add New Invoice</h3>
+            <input
+              name="customerId"
+              placeholder="Customer ID"
+              value={newInvoice.customerId}
+              onChange={handleChange}
+            />
+            <input
+              type="date"
+              name="due"
+              value={newInvoice.due}
+              onChange={handleChange}
+            />
+            <input
+              type="number"
+              name="amount"
+              placeholder="Amount"
+              value={newInvoice.amount}
+              onChange={handleChange}
+            />
+            <select
+              name="status"
+              value={newInvoice.status}
+              onChange={handleChange}
+            >
+            <option value="UNPAID">Unpaid</option>
+            <option value="PARTIALLY_PAID">Partially Paid</option>
+            <option value="PAID">Paid</option>
+            </select>
+            <div className="modal-actions">
+              <button className="save-btn" onClick={handleSaveInvoice}>
+              {editingId ? "Update" : "Save"}
+            </button>
+
+              <button
+                className="cancel-btn"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    
+  
+
       <style>{`
-        .container { font-family: Arial, sans-serif; background: white; padding: 20px; border-radius: 8px; }
-        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .header-actions { display: flex; gap: 10px; }
-        .search-input { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
-        .add-button, .export-button { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
-        .add-button { background: #3498db; color: white; }
-        .export-button { background: #2ecc71; color: white; }
-        .message-box { padding: 8px; background: #d1fae5; color: #065f46; border-radius: 4px; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
-        .status-text { color: black; font-weight: bold; }
-        .icon { margin-right: 8px; cursor: pointer; font-size: 18px; vertical-align: middle; }
-        .edit-icon { background-color: white; color: #28a745; } /* green outline */
-        .delete-icon { backgorund-color: white; color: #dc3545; } /* red outline */
-        .download-icon { background-color: color: black; } /* plain black */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; display: flex; flex-direction: column; gap: 10px; }
-        .button-group { display: flex; justify-content: flex-end; gap: 10px; }
-        .save-button { background: #3498db; color: white; padding: 5px 10px; border: none; border-radius: 4px; }
-        .cancel-button { background: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 4px; }
+        .invoice-page {
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        }
+        h2 {
+        margin-bottom: 15px;
+        color: #333;
+        }
+        .actions {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        }
+        .search-input {
+        padding: 8px;
+        width: 250px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        }
+        .add-btn {
+        background:blue;
+        color: white;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        }
+        .invoice-table {
+        width: 100%;
+        border-collapse: collapse;
+        }
+        .invoice-table th, .invoice-table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
+        }
+        .invoice-table th {
+        background: #f4f4f4;
+        }
+        .status {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.7em;
+  font-weight: normal;
+}
+
+.status.paid {
+  color: black;
+}
+
+.status.unpaid {
+  color: black;
+}
+
+.status.partial {
+  color: black;
+}
+
+        .icon-btn { 
+        position: relative; 
+        border: none; 
+        border-radius: 4px; 
+        padding: 6px; 
+        cursor: pointer; 
+        font-size: 16px; 
+        }
+        .icon-btn svg { 
+        pointer-events: none; 
+        }
+        .icon-btn::after {
+          content: attr(data-tooltip);
+          position: absolute;
+          bottom: 125%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #333;
+          color: white;
+          font-size: 0.75em;
+          padding: 4px 6px;
+          border-radius: 4px;
+          opacity: 0;
+          pointer-events: none;
+          white-space: nowrap;
+          transition: opacity 0.2s ease-in-out;
+        }
+        .icon-btn:hover::after { 
+        opacity: 1; 
+        }
+        .view-btn { 
+        background: white; 
+        color:blue; 
+        }
+        .edit-btn { 
+        background: white; 
+        color: green; 
+        }
+        .delete-btn { 
+        background: white; 
+        color: red; 
+        }
+        .modal-overlay { 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        right: 0; 
+        bottom: 0; 
+        background: rgba(0,0,0,0.5); 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        }
+        .modal { 
+        background: white; 
+        padding: 20px; 
+        border-radius: 8px; 
+        width: 300px; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 10px; 
+        }
+        .modal input, .modal select { 
+        padding: 8px; 
+        border: 1px solid #ccc; 
+        border-radius: 4px; 
+        }
+        .modal-actions { 
+        display: flex; 
+        justify-content: flex-end; 
+        gap: 10px; 
+        }
+        .save-btn { 
+        background: green; 
+        color: white; 
+        }
+        .cancel-btn { 
+        background: gray; 
+        color: white; 
+        }
       `}</style>
     </div>
   );
 };
 
-export default InvoicesPage;
+export default InvoicePage;

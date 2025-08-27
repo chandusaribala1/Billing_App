@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { User, Box, FileText, CreditCard, BarChart2, LogOut, UserCircle2, Menu, Search } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import CustomersPage from "./CustomersPage.jsx";
@@ -6,46 +6,72 @@ import InvoicePage from "./InvoicePage.jsx";
 import PaymentPage from "./PaymentPage.jsx";
 import ProductsPage from "./ProductsPage.jsx";
 import ReportsPage from "./ReportsPage.jsx";
-
+import PaymentsPage from './../accountant/PaymentsPage';
+import axios from "axios";
 const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activePage, setActivePage] = useState("dashboard");
+  const [products, setProducts] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+
 
   // Dummy KPI data
-  const kpis = {
-    users: 1250,
-    orders: 345,
+  const [kpis, setKpis] = useState({
+    users: 0,
+    Invoices: 0,
     revenue: 58000,
-    notifications: 7,
-  };
+    products: 0,
+  });
 
-  // Dummy recent users
-  const users = [
-    { id: 1, name: "John Doe", email: "john@example.com", status: "Active" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", status: "Pending" },
-    { id: 3, name: "Alex Johnson", email: "alex@example.com", status: "Banned" },
-    { id: 4, name: "Maria Garcia", email: "maria@example.com", status: "Active" },
-  ];
+  useEffect(() => {
+  fetchCustomerCount();
+  fetchProductCount();
+  fetchInvoiceCount();
+}, []);
+const [users, setUsers] = useState([]);
 
-  // Dummy recent orders
-  const orders = [
-    { id: 101, customer: "John Doe", total: 1500, date: "2025-08-10", status: "Shipped" },
-    { id: 102, customer: "Jane Smith", total: 2300, date: "2025-08-09", status: "Processing" },
-    { id: 103, customer: "Alex Johnson", total: 800, date: "2025-08-08", status: "Cancelled" },
-    { id: 104, customer: "Maria Garcia", total: 1200, date: "2025-08-07", status: "Delivered" },
-  ];
+const fetchCustomerCount = async () => {
+  try {
+    const token = localStorage.getItem("token"); // ✅ get token saved on login
+    const res = await axios.get("http://localhost:8080/customers", {
+      headers: { Authorization: `Bearer ${token}` }, // ✅ attach token
+    });
+    setKpis((prev) => ({ ...prev, users: res.data.length })); // count from DB
+    setUsers(res.data); // ✅ store list of users for table
 
-  // Dummy notifications
-  const notifications = [
-    "New user registered: John Doe",
-    "Order #102 status changed to Processing",
-    "System maintenance scheduled for Aug 15",
-    "Password reset requested by Jane Smith",
-    "New message from support team",
-    "Order #101 shipped",
-    "Revenue target reached for July",
-  ];
+  } catch (err) {
+    console.error("Error fetching customer count:", err);
+  }
+};
+const fetchProductCount = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await axios.get("http://localhost:8080/products", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setKpis((prev) => ({ ...prev, products: res.data.length })); // store count
+    setProducts(res.data); // keep list if needed
+  } catch (err) {
+    console.error("Error fetching product count:", err);
+  }
+};
+
+const fetchInvoiceCount = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await axios.get("http://localhost:8080/invoices", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setKpis((prev) => ({ ...prev, invoices: res.data.length })); // ✅ store invoice count
+    setInvoices(res.data); // ✅ save invoices for "Recent Invoices" table
+  } catch (err) {
+    console.error("Error fetching invoice count:", err);
+  }
+};
+
+  
 
   // Sales data for chart
   const salesData = [
@@ -72,8 +98,8 @@ const AdminDashboard = () => {
         <div className="kpi-card">
           <FileText size={40} />
           <div className="kpi-content">
-            <span>Orders</span>
-            <span className="number">{kpis.orders.toLocaleString()}</span>
+            <span>Invoices</span>
+            <span className="number">{kpis.invoices?.toLocaleString() || 0}</span>
           </div>
         </div>
         <div className="kpi-card">
@@ -86,8 +112,8 @@ const AdminDashboard = () => {
         <div className="kpi-card">
           <BarChart2 size={40} />
           <div className="kpi-content">
-            <span>Notifications</span>
-            <span className="number">{kpis.notifications}</span>
+            <span>Total Products</span>
+            <span className="number">{kpis.products?.toLocaleString() || 0}</span>
           </div>
         </div>
       </div>
@@ -114,40 +140,42 @@ const AdminDashboard = () => {
         </tbody>
       </table>
 
-      <h2 style={{ marginLeft: 25 }}>Recent Orders</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Order #</th>
-            <th>Customer</th>
-            <th>Total (₹)</th>
-            <th>Date</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map((order) => (
-            <tr key={order.id}>
-              <td>{order.id}</td>
-              <td>{order.customer}</td>
-              <td>{order.total.toLocaleString()}</td>
-              <td>{order.date}</td>
-              <td>
-                <span className={`status ${order.status}`}>{order.status}</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h2 style={{ marginLeft: 25 }}>Recent Invoices</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Invoice #</th>
+      <th>Customer</th>
+      <th>Amount (₹)</th>
+      <th>Date</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {invoices.map((invoice) => (
+      <tr key={invoice.id}>
+        <td>{invoice.id}</td>
+        <td>{invoice.customer?.name || "N/A"}</td>
+        <td>{invoice.totalAmount?.toLocaleString() || 0}</td>
+        <td>{invoice.createdDate}</td>
+        <td>
+          <span className={`status ${invoice.status}`}>{invoice.status}</span>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
 
-      <div className="notifications">
+
+
+      {/* <div className="notifications">
         <h2>Notifications</h2>
         <ul>
           {notifications.map((note, idx) => (
             <li key={idx}>{note}</li>
           ))}
         </ul>
-      </div>
+      </div> */}
 
       <div className="charts">
         <h2>Sales Over Time</h2>
@@ -192,23 +220,24 @@ const AdminDashboard = () => {
     <>
       <style>{`
         body, html, #root {
-          margin: 0; 
-          padding: 0; 
-          height: 100%; 
+          margin: 0;
+          padding: 0;
+          height: 100%;
           width: 100vw;
           font-family: Arial, sans-serif;
         }
         .dashboard-wrapper {
-          display: flex; 
-          height: 100vh; 
+          width: 100vw;
+          display: flex;
+          height: 100vh;
           overflow: hidden;
         }
         .sidebar {
-           background: linear-gradient(125deg, #e374f4, #aa1bed, #844582, #a6dff4);
+          background: linear-gradient(125deg, #e374f4, #aa1bed, #844582, #a6dff4);
           color: white; 
           width: 240px; 
-          flex-shrink: 0; 
-          display: flex; 
+          flex-shrink: 0;
+          display: flex;
           flex-direction: column;
           transition: width 0.3s ease;
         }
@@ -467,14 +496,20 @@ const AdminDashboard = () => {
           }
           .main-content {
             margin-left: 0 !important;
-          }import PaymentsPage from './../accountant/PaymentsPage';
+          }
 
         }
       `}</style>
 
       <div className="dashboard-wrapper">
         <nav className={`sidebar ${sidebarOpen ? "" : "collapsed"}`}>
-          
+          {!sidebarOpen && (
+      <div
+      className="fixed inset-0 bg-black bg-opacity-40 z-50 md:hidden"
+      onClick={() => setSidebarOpen(true)}
+      ></div>
+)}
+
           <div className="sidebar-header" >
             <button
                 className="sidebar-toggle-btn"
@@ -483,7 +518,7 @@ const AdminDashboard = () => {
               >
                 <Menu size={24} />
               </button>
-           </div>
+          </div>
           
           <div className="sidebar-menu">
             <div
@@ -535,10 +570,17 @@ const AdminDashboard = () => {
                 <UserCircle2 size={18} />
                 Profile
               </button>
-              <button>
-                <LogOut size={18} />
+              <button
+                onClick={() => {
+                localStorage.removeItem("token");
+                localStorage.removeItem("username");
+                window.location.href = "/login"; // redirect to signin page
+              }}
+              >
+              <LogOut size={18} />
                 Logout
               </button>
+
             </div>
           </header>
 

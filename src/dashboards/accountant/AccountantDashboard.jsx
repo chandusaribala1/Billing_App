@@ -46,13 +46,14 @@ const AccountantDashboard = () => {
           <div className="navbar-left">Accountant Dashboard</div>
           <div className="navbar-right">
             <Link to="/">Home</Link>
-            <Link to="/logout">Logout</Link>
+            <Link to="/login">Logout</Link>
           </div>
         </header>
 
         <div className="page-content">
           <Routes>
-            <Route path="invoices" element={<InvoicesPage />} />
+            
+            <Route path="/" element={<InvoicesPage />} />
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="reports" element={<ReportsPage />} />
           </Routes>

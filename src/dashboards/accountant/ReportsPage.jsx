@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
   ResponsiveContainer,
   BarChart,
@@ -12,49 +13,90 @@ import {
   Legend,
 } from "recharts";
 
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api",
+});
+
 const ReportsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [invoices, setInvoices] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [financialSummary, setFinancialSummary] = useState({
+    profit: 0,
+    expenses: 0,
+    cashFlow: 0,
+  });
 
-  const financialSummary = {
-    profit: 45000,
-    expenses: 22000,
-    cashFlow: 18000,
+  // 🎯 Fetch invoices & expenses from backend
+  const fetchReports = async () => {
+    try {
+      const [invoiceRes, expenseRes] = await Promise.all([
+        api.get("/invoices"),
+        api.get("/expenses"), // <-- make sure you have this endpoint
+      ]);
+
+      const invoicesData = invoiceRes.data;
+      const expensesData = expenseRes.data || [];
+
+      setInvoices(invoicesData);
+      setExpenses(expensesData);
+
+      // 💰 Calculate summary
+      const totalSales = invoicesData.reduce(
+        (sum, inv) => sum + (inv.totalAmount || 0),
+        0
+      );
+      const totalExpenses = expensesData.reduce(
+        (sum, exp) => sum + (exp.amount || 0),
+        0
+      );
+
+      setFinancialSummary({
+        profit: totalSales - totalExpenses,
+        expenses: totalExpenses,
+        cashFlow: totalSales - totalExpenses, // simple cashflow
+      });
+    } catch (err) {
+      console.error("Error fetching reports:", err);
+    }
   };
-  const salesData = [
-    { id: 1, client: "John Doe", amount: 5000, date: "2025-01-15" },
-    { id: 2, client: "Jane Smith", amount: 7000, date: "2025-02-12" },
-    { id: 3, client: "Raj Kumar", amount: 4000, date: "2025-03-20" },
-    { id: 4, client: "Maria Lopez", amount: 8000, date: "2025-04-25" },
-    { id: 5, client: "Tim Lee", amount: 6000, date: "2025-05-10" },
-  ];
-  const monthlySales = [
-    { month: "Jan", sales: 5000 },
-    { month: "Feb", sales: 7000 },
-    { month: "Mar", sales: 4000 },
-    { month: "Apr", sales: 8000 },
-    { month: "May", sales: 6000 },
-  ];
 
-  
-  const expenseData = [
-    { name: "Rent", value: 7000 },
-    { name: "Salaries", value: 10000 },
-    { name: "Utilities", value: 3000 },
-    { name: "Supplies", value: 2000 },
-  ];
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  // 📊 Monthly Sales (grouped by month)
+  const monthlySales = invoices.reduce((acc, inv) => {
+    const month = new Date(inv.dueDate).toLocaleString("default", {
+      month: "short",
+    });
+    const existing = acc.find((m) => m.month === month);
+    if (existing) {
+      existing.sales += inv.totalAmount;
+    } else {
+      acc.push({ month, sales: inv.totalAmount });
+    }
+    return acc;
+  }, []);
+
+  // 🧾 Expense breakdown for PieChart
+  const expenseData = expenses.map((exp) => ({
+    name: exp.category || "Other",
+    value: exp.amount,
+  }));
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
-
-  const filteredSales = salesData.filter(sale =>
-    sale.client.toLowerCase().includes(searchTerm.toLowerCase())
+  // 🔎 Filter sales by customer name
+  const filteredSales = invoices.filter((inv) =>
+    inv.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="reports-container">
       <h1>Accountant Reports</h1>
 
-  
+      {/* Summary Cards */}
       <div className="summary-cards">
         <div className="card profit">
           <h3>Profit</h3>
@@ -70,14 +112,14 @@ const ReportsPage = () => {
         </div>
       </div>
 
- 
+      {/* Sales Report Table */}
       <div className="sales-report">
         <h2>Sales Report</h2>
         <input
           type="text"
           placeholder="Search by client name"
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
         />
         <table>
@@ -90,11 +132,11 @@ const ReportsPage = () => {
           </thead>
           <tbody>
             {filteredSales.length > 0 ? (
-              filteredSales.map(sale => (
-                <tr key={sale.id}>
-                  <td>{sale.client}</td>
-                  <td>{sale.amount.toLocaleString()}</td>
-                  <td>{sale.date}</td>
+              filteredSales.map((inv) => (
+                <tr key={inv.id}>
+                  <td>{inv.customer?.name}</td>
+                  <td>{inv.totalAmount.toLocaleString()}</td>
+                  <td>{inv.dueDate}</td>
                 </tr>
               ))
             ) : (
@@ -107,11 +149,16 @@ const ReportsPage = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Charts */}
       <div className="charts">
         <div className="chart-box">
           <h3>Monthly Sales</h3>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={monthlySales} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+            <BarChart
+              data={monthlySales}
+              margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+            >
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
@@ -134,7 +181,10 @@ const ReportsPage = () => {
                 label
               >
                 {expenseData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip />

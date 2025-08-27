@@ -1,21 +1,42 @@
 import React, { useState } from "react";
+import axios from "axios";
 import "./Auth.css";
 import "./Login.css";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("ADMIN"); // ✅ Added role state
+  // const [role, setRole] = useState("ADMIN"); // ✅ Added role state
 
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
 
-  const handleLogin = (e) => {
+  const handleLogin = async(e) => {
     e.preventDefault();
-    console.log("Login request", { email, password, role });
-    // Later: axios.post("/auth/login", { email, password, role })
-  };
+    try {
+    const res = await axios.post("http://localhost:8080/auth/login", {
+      email,
+      password,
+    });
+  
+  // ✅ Save JWT token in localStorage for later requests
+  localStorage.setItem("token", res.data.token);
+    localStorage.setItem("role", res.data.message);// backend sends role in messag
+  // ✅ Redirect based on role returned from backend
+  const role = res.data.message?.toUpperCase(); 
+  localStorage.setItem("role", role);
+  if (res.data.message === "ADMIN") {
+      window.location.href = "/admin";
+    } else if (res.data.message === "ACCOUNTANT") {
+      window.location.href = "/accountant";
+    } else {
+      window.location.href = "/customer";
+    }
 
+  } catch (err) {
+    alert(err.response?.data?.message || "Login failed");
+  }
+};
   const handlePasswordRecovery = (e) => {
     e.preventDefault();
     console.log("Password recovery request sent to:", recoveryEmail);
@@ -47,37 +68,6 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-
-              {/* ✅ Role selection inside login form */}
-              <div className="role-selection">
-                <label>
-                  <input
-                    type="radio"
-                    value="ADMIN"
-                    checked={role === "ADMIN"}
-                    onChange={(e) => setRole(e.target.value)}
-                  />
-                  Admin
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    value="ACCOUNTANT"
-                    checked={role === "ACCOUNTANT"}
-                    onChange={(e) => setRole(e.target.value)}
-                  />
-                  Accountant
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    value="CUSTOMER"
-                    checked={role === "CUSTOMER"}
-                    onChange={(e) => setRole(e.target.value)}
-                  />
-                  Customer
-                </label>
-              </div>
 
               <button type="submit">Login</button>
 

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
+import axios from "axios";
 import {
   Search,
   CreditCard,
@@ -25,42 +26,103 @@ import {
 const PaymentsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-
-  const payments = [
-    { id: 1, invoice: "#INV001", client: "John Doe", amount: 5000, date: "2025-08-01", status: "Paid", method: "Credit Card", transactionId: "TXN12345" },
-    { id: 2, invoice: "#INV002", client: "Jane Smith", amount: 2500, date: "2025-08-03", status: "Pending", method: "UPI", transactionId: "TXN12346" },
-    { id: 3, invoice: "#INV003", client: "Raj Kumar", amount: 4500, date: "2025-07-28", status: "Overdue", method: "Bank Transfer", transactionId: "TXN12347" },
-    { id: 4, invoice: "#INV004", client: "Maria Lopez", amount: 1200, date: "2025-08-05", status: "Refunded", method: "Cash", transactionId: "TXN12348" }
-  ];
-
-  const summaryData = {
-    totalPaid: payments.filter(p => p.status === "Paid").reduce((sum, p) => sum + p.amount, 0),
-    pending: payments.filter(p => p.status === "Pending").length,
-    overdue: payments.filter(p => p.status === "Overdue").length,
-    refunds: payments.filter(p => p.status === "Refunded").length
+  const [payments, setPayments] = useState([]);
+  
+  const fetchPayments = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:8080/api/payments", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPayments(res.data);
+    } catch (err) {
+      console.error("Error fetching payments:", err);
+    }
   };
 
+  useEffect(() => {
+    fetchPayments();
+  }, []);
+  // Download invoice PDF
+const handleDownload = async (invoiceId) => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await axios.get(`http://localhost:8080/api/invoices/${invoiceId}/download`, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: "blob" // important for files
+    });
+    // Create a link to download
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `invoice_${invoiceId}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+  } catch (err) {
+    console.error("Download failed:", err);
+  }
+};
+
+// Update payment status
+// const handleUpdateStatus = async (paymentId, newStatus) => {
+//   try {
+//     const token = localStorage.getItem("token");
+//     await axios.patch(`http://localhost:8080/api/payments/${paymentId}`, 
+//       { status: newStatus },
+//       { headers: { Authorization: `Bearer ${token}` } }
+//     );
+//     fetchPayments(); // Refresh data
+//   } catch (err) {
+//     console.error("Update failed:", err);
+//   }
+// };
+
+// Delete payment
+const handleDelete = async (paymentId) => {
+  try {
+    const token = localStorage.getItem("token");
+    await axios.delete(`http://localhost:8080/api/payments/${paymentId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    fetchPayments(); // Refresh data
+  } catch (err) {
+    console.error("Delete failed:", err);
+  }
+};
+
+  // Filtered payments for table
   const filteredPayments = payments.filter(payment =>
     (statusFilter === "All" || payment.status === statusFilter) &&
-    (payment.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.invoice.toLowerCase().includes(searchTerm.toLowerCase()))
+    (payment.invoice?.id.toString().includes(searchTerm) ||
+    payment.invoice?.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const chartData = [
-    { name: "Jan", value: 3000 },
-    { name: "Feb", value: 4500 },
-    { name: "Mar", value: 2000 },
-    { name: "Apr", value: 6000 },
-    { name: "May", value: 3500 },
-    { name: "Jun", value: 5000 }
-  ];
+  // Summary cards
+  const summaryData = {
+    totalPaid: payments
+      .filter(p => p.status === "PAID")
+      .reduce((sum, p) => sum + Number(p.amount), 0),
+    pending: payments.filter(p => p.status === "PENDING").length,
+    overdue: payments.filter(p => p.status === "OVERDUE").length,
+    refunds: payments.filter(p => p.status === "REFUNDED").length,
+  };
 
-  const pieData = [
-    { name: "Credit Card", value: 2 },
-    { name: "UPI", value: 1 },
-    { name: "Bank Transfer", value: 1 },
-    { name: "Cash", value: 1 }
-  ];
+  // Chart data: Payments over time (by month)
+  const chartData = payments.reduce((acc, p) => {
+    const month = new Date(p.paymentDate).toLocaleString("default", { month: "short" });
+    const existing = acc.find(c => c.name === month);
+    if (existing) existing.value += Number(p.amount);
+    else acc.push({ name: month, value: Number(p.amount) });
+    return acc;
+  }, []);
+
+  // Pie chart: Payment methods count
+  const pieData = Object.entries(
+    payments.reduce((acc, p) => {
+      acc[p.method] = (acc[p.method] || 0) + 1;
+      return acc;
+    }, {})
+  ).map(([name, value]) => ({ name, value }));
 
   const COLORS = ["#4CAF50", "#2196F3", "#FF9800", "#9C27B0"];
 
@@ -119,7 +181,7 @@ const PaymentsPage = () => {
 
   return (
     <div style={styles.paymentsContainer}>
-      <h1 style={styles.h1}>Payments Dashboard</h1>
+      <h1 style={styles.h3}>Payments </h1>
 
       {/* Summary Cards */}
       <div style={styles.summaryCards}>
@@ -175,25 +237,32 @@ const PaymentsPage = () => {
         <tbody>
           {filteredPayments.map(payment => (
             <tr key={payment.id}>
-              <td style={styles.thTd}>{payment.invoice}</td>
-              <td style={styles.thTd}>{payment.client}</td>
-              <td style={styles.thTd}>₹{payment.amount}</td>
-              <td style={styles.thTd}>{payment.date}</td>
+              <td style={styles.thTd}>{payment.invoice?.id}</td>
+              <td style={styles.thTd}>{payment.invoice?.customer?.name || "N/A"}</td>
+              <td style={styles.thTd}>₹{payment.amount || payment.invoice?.totalAmount}</td>
+              <td style={styles.thTd}>{payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : "N/A"}</td>
               <td style={{ ...styles.thTd, ...styles.statusText }}>{payment.status}</td>
               <td style={styles.thTd}>{payment.method}</td>
               <td style={styles.thTd}>{payment.transactionId}</td>
               <td style={styles.thTd}>
-                <button style={{ ...styles.actionsButton, color: "green" }}>
+                <button  style={{ ...styles.actionsButton, color: "blue" }}
+    onClick={() => {
+      if (payment.invoice?.id) {
+        handleDownload(payment.invoice.id);
+      } else {
+        console.error("No invoice ID found for payment", payment);
+      }
+    }}
+  >
                   <Download size={18} />
                 </button>
-                <button style={{ ...styles.actionsButton, color: "green" }}>
+                {/* <button style={{ ...styles.actionsButton, color: "green" }}
+                onClick={() => handleUpdateStatus(payment.id, "PAID")}>
                   <Send size={18} />
-                </button>
-                <button style={{ ...styles.actionsButton, color: "green" }}>
+                </button> */}
+                <button style={{ ...styles.actionsButton, color: "red" }}
+                onClick={() => handleDelete(payment.id)}>
                   <CheckCircle size={18} />
-                </button>
-                <button style={{ ...styles.actionsButton, color: "red" }}>
-                  <XCircle size={18} />
                 </button>
               </td>
             </tr>

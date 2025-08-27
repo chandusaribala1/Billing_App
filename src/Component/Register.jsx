@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
-import { Link } from "react-router-dom"; // <-- for navigation
+import { Link, useNavigate } from "react-router-dom"; // ✅ add useNavigate
+import axios from "axios";
 import "./Auth.css";
 import "./Login.css";
 
@@ -9,16 +10,31 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role] = useState("CUSTOMER");
+  
 
-  const handleRegister = (e) => {
+  const navigate = useNavigate(); // ✅ initialize navigate
+
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-    console.log("Register request", { fullName, email, password, role });
-    // axios.post("/auth/register", { fullName, email, password, role })
+    try {
+      const response = await axios.post("http://localhost:8080/auth/register", {
+        username:fullName,  
+        email,
+        password,
+      });
+
+      if (response.status === 200) {
+        alert("Registration successful! Please login.");
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("Registration error:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Registration failed!");
+    }
   };
 
   return (
