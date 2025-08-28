@@ -49,7 +49,11 @@ const CustomerDashboard = () => {
 
         <div className="page-content">
           <Routes>
+<<<<<<< HEAD
             <Route index element={<MyInvoicesPage />} />
+=======
+            <Route path="/" element={<MyInvoicesPage />} />
+>>>>>>> 9f5c087768bd9dfb788a3a999f8200639ae3e43d
             <Route path="invoices" element={<MyInvoicesPage />} />
             <Route path="payments" element={<MyPaymentsPage />} />
             <Route path="profile" element={<CustomerProfile />} />
