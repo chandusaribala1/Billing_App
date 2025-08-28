@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const ProfileSettings = () => {
+const CustomerProfile = () => {
   const [profile, setProfile] = useState({
     name: "John Doe",
     email: "johndoe@email.com",
@@ -187,8 +187,9 @@ const ProfileSettings = () => {
 
       {/* CSS */}
       <style>{`
+      
         .profile-container {
-          width:93vw;
+          
           display: flex;
           justify-content: center;
           padding: 40px;
@@ -271,4 +272,4 @@ const ProfileSettings = () => {
   );
 };
 
-export default ProfileSettings;
+export default CustomerProfile;

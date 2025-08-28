@@ -1,21 +1,17 @@
 import React, { useState } from "react";
-import { Routes, Route, Link } from "react-router-dom";
-import { UserCircle2, LogOut, FileText, CreditCard } from "lucide-react";
-import MyPaymentsPage from "./MyPaymentsPage";
-import CustomerProfile from "./CustomerProfile";
-import { useNavigate } from "react-router-dom";
+// Removed UserCircle2, LogOut as navbar is removed
+// Removed useNavigate as navigation links are no longer present
+
 import jsPDF from "jspdf";
-import "jspdf-autotable"; 
+import "jspdf-autotable";
 
-
-
+// Function to generate the invoice PDF with dynamic data
 const generateInvoicePDF = (invoice) => {
-  console.log("Download function triggered ✅");
-
+  console.log("Download function triggered ✅ for invoice:", invoice.id);
 
   const doc = new jsPDF();
 
-  // 🏢 Company Details
+  // 🏢 Company Details (Static for now, but could be dynamic from a 'companyInfo' prop/context)
   doc.setFontSize(22);
   doc.setTextColor("#aa1bed");
   doc.text("INVOICE", 14, 20);
@@ -28,64 +24,72 @@ const generateInvoicePDF = (invoice) => {
   doc.text("Mobile: 0000000000", 14, 42);
   doc.text("Email: info@accubillify.com", 14, 48);
 
-  // 📄 Invoice Info
+  // 📄 Invoice Info - Dynamically pulled from the 'invoice' object
   doc.setTextColor("#d2277e");
   doc.text("Bill To:", 14, 60);
-  doc.text("Green1 Materials LLC", 14, 66);
-  doc.text("#34, Car Street", 14, 72);
-  doc.text("City Park", 14, 78);
-  doc.text("Hong Kong", 14, 84);
+  // Dynamically setting customer details
+  doc.text(invoice.customer.name, 14, 66);
+  doc.text(invoice.customer.addressLine1, 14, 72);
+  doc.text(invoice.customer.addressLine2, 14, 78);
+  doc.text(invoice.customer.city + ", " + invoice.customer.country, 14, 84);
 
   doc.setFontSize(11);
   doc.text("Invoice No :", 145, 75);
-  // FIX: Use the 'id' from the passed 'invoice' object.
-  doc.text(invoice.id, 180, 75, { align: "right" })  
+  doc.text(invoice.id, 180, 75, { align: "right" }); // Using dynamic invoice ID
   doc.text("Invoice Date :", 145, 81);
-  // FIX: Use the 'paidDate' from the passed 'invoice' object.
-  doc.text(invoice.paidDate, 180, 81, { align: "right" })  
+  doc.text(invoice.paidDate || "N/A", 180, 81, { align: "right" }); // Using dynamic paidDate
   doc.text("Due Date :", 145, 87);
-  // FIX: Use the 'dueDate' from the passed 'invoice' object.
-  doc.text(invoice.dueDate, 180, 87, { align: "right" })  
-  // ✅ ✅ ✅ FIX: Correct use of autoTable via doc.autoTable
+  doc.text(invoice.dueDate, 180, 87, { align: "right" }); // Using dynamic dueDate
+
+  // === Invoice Items Table ===
+  // Dynamically populate 'body' with data from 'invoice.items'
+  const tableBody = invoice.items.map((item, index) => [
+    index + 1,
+    item.description,
+    item.quantity,
+    `$${item.unitPrice.toFixed(2)}`,
+    `$${(item.quantity * item.unitPrice).toFixed(2)}`,
+  ]);
+
   doc.autoTable({
-   startY: 95,
-   head: [["Sl.", "Description", "Qty", "Rate", "Amount"]],
-   body: [
-     ["1", "Desktop furniture", "1", "$232.00", "$232.00"],
-     ["2", "Plumbing and electrical services", "2", "$514.00", "$1028.00"],
-     ["3", "Water tank repair works", "2", "$152.00", "$304.00"]
-   ],
-   theme: 'grid',
-   headStyles: {
-     fillColor: "#d2277e",
-     textColor: "#ffffff",
-     fontStyle: 'bold',
-     halign: 'center'
-   },
-   styles: {
-     halign: 'center',
-     cellPadding: 4
-   }
+    startY: 95,
+    head: [["Sl.", "Description", "Qty", "Rate", "Amount"]],
+    body: tableBody, // Use the dynamically generated table body
+    theme: 'grid',
+    headStyles: {
+      fillColor: "#d2277e",
+      textColor: "#ffffff",
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    styles: {
+      halign: 'center',
+      cellPadding: 4,
+    },
   });
+
   const finalY = doc.lastAutoTable.finalY + 10;
+
+  // --- Calculate Totals Dynamically ---
+  const subtotal = invoice.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  const totalPaid = invoice.payments ? invoice.payments.reduce((sum, payment) => sum + payment.amount, 0) : 0;
+  const balanceDue = subtotal - totalPaid;
 
   // === Totals Section ===
   doc.setFontSize(11);
   doc.text("Subtotal", 145, finalY);
-  doc.text("$1,564.00", 180, finalY);
-
+  doc.text(`$${subtotal.toFixed(2)}, 180, finalY, { align: "right" }`);
   doc.text("Total", 145, finalY + 6);
-  doc.text("$1,564.00", 180, finalY + 6);
-
-  doc.text("Paid (Jun 22, 2021)", 145, finalY + 12);
-  doc.text("$232.00", 180, finalY + 12);
+  doc.text(`$${subtotal.toFixed(2)}, 180, finalY + 6, { align: "right" }`);
+  doc.text("Paid (As of " + (invoice.paidDate || "N/A") + ")", 145, finalY + 12); // Dynamic paid date
+  doc.text(`$${totalPaid.toFixed(2)}, 180, finalY + 12, { align: "right" }`);
 
   doc.setTextColor("#d2277e");
   doc.text("Balance Due", 145, finalY + 18);
-  doc.text("$1,332.00", 180, finalY + 18);
+  doc.text(`$${balanceDue.toFixed(2)}, 180, finalY + 18, { align: "right" }`);
   doc.setTextColor("#000000");
 
-  // === Payment Instructions ===
+  // === Payment Instructions === (Static for now)
   doc.setFontSize(11);
   doc.setTextColor("#d2277e");
   doc.text("Payment Instructions", 14, finalY + 30);
@@ -93,433 +97,249 @@ const generateInvoicePDF = (invoice) => {
   doc.text("Pay Cheque to", 14, finalY + 36);
   doc.text("John Doe", 14, finalY + 42);
 
-  // === Footer Signature ===
+  // === Footer Signature === (Static for now)
   doc.text("Authorized Signatory", 150, 280);
 
   // === Save as PDF ===
-  doc.save(${invoice.id}_AccuBillify_Invoice.pdf);
+  doc.save(`${invoice.id}_AccuBillify_Invoice.pdf`);
 };
 
-
-
-// const links = [
-//     { name: "Invoices", path: "invoices" },
-//     { name: "Payments", path: "payments" },
-//     { name: "Profile", path: "profile" },
-//   ];
-
+// --- Mock Invoices Data (more detailed for dynamic PDF generation) ---
+// In a real application, this data would be fetched from your backend API.
 const invoices = [
   {
     id: "INV-001",
     status: "Paid",
     dueDate: "2023-10-25",
     paidDate: "2023-10-26",
+    customer: {
+      name: "Green1 Materials LLC",
+      addressLine1: "#34, Car Street",
+      addressLine2: "City Park",
+      city: "Hong Kong",
+      country: "China",
+    },
+    items: [
+      { description: "Desktop furniture", quantity: 1, unitPrice: 232.00 },
+      { description: "Plumbing and electrical services", quantity: 2, unitPrice: 514.00 },
+      { description: "Water tank repair works", quantity: 2, unitPrice: 152.00 },
+    ],
+    payments: [{ amount: 1564.00, date: "2023-10-26" }], // Simulate full payment
   },
   {
     id: "INV-002",
     status: "Pending",
     dueDate: "2023-11-15",
     paidDate: null,
+    customer: {
+      name: "Blue Sky Corp",
+      addressLine1: "123 Ocean View",
+      addressLine2: "Coastal Road",
+      city: "Malibu",
+      country: "USA",
+    },
+    items: [
+      { description: "Consulting services", quantity: 10, unitPrice: 100.00 },
+      { description: "Software license", quantity: 1, unitPrice: 500.00 },
+    ],
+    payments: [], // No payments yet
+  },
+  {
+    id: "INV-003",
+    status: "Partially Paid",
+    dueDate: "2023-09-01",
+    paidDate: "2023-08-28", // Last payment date
+    customer: {
+      name: "Red Earth Traders",
+      addressLine1: "789 Mountain Peak",
+      addressLine2: "Highlands",
+      city: "Denver",
+      country: "USA",
+    },
+    items: [
+      { description: "Raw materials", quantity: 500, unitPrice: 1.50 },
+      { description: "Shipping fees", quantity: 1, unitPrice: 150.00 },
+    ],
+    payments: [{ amount: 500.00, date: "2023-08-28" }], // Partial payment
   },
 ];
 
+// --- React Component ---
 const MyInvoicesPage = () => {
-  const navigate = useNavigate();
-  //  const [activePage, setActivePage] = useState("dashboard");
-   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  // const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Removed useNavigate as there are no navigation elements
+  // No need for isSidebarCollapsed state as sidebar is removed.
+
+  // Using the mock 'invoices' for display in this example.
+  // In a real application, you would fetch this data from your backend.
+  const displayInvoices = invoices; 
 
   return (
     <>
       <style>{`
-      body, html, #root {
+        body, html, #root { 
           margin: 0; 
           padding: 0; 
           height: 100%; 
-          width: 100vw;
+          width: 100vw; 
           font-family: Arial, sans-serif;
+          color: black; /* Main font color for the body */
+          background-color: #f8f9fa; /* Light background for the entire page */
         }
 
-        .dashboard-wrapper {
-          // width: 100vw;
-          display: flex;
-          height: 100vh;
-          overflow: hidden;
-        }
-
-        .sidebar {
-          background: linear-gradient(125deg, #e374f4, #aa1bed, #844582, #a6dff4);
-          color: white;
-          width: 240px;
-          flex-shrink: 0;
-          display: flex;
-          flex-direction: column;
-          transition: width 0.3s ease;
-          // position: relative;
-        }
-
-        .sidebar.collapsed {
-          width: 60px;
-          // display: none;
-        }
-
-        .sidebar-header {
-          padding: 20px;
-          font-size: 1.5rem;
-          text-align: center;
-          border-bottom: 1px solid #3e4e5e; 
-          user-select:none;
-        }
-
-        .sidebar-toggle-btn {
-          background: fixed;
-          border: none;
-          cursor: pointer;
-          color: #f8f2f2ff;
-          font-size: 1.5rem;
-          margin-right:12px;
-          padding: 5px;
-        }
-
-        .sidebar-title {
-          font-size: 1.8rem;
-          font-weight: bold;
-          color: white;
-          margin-left: 10px;
-        }
-
-        .sidebar-menu {
-          flex-grow: 1;
-          padding:10px 0;
-        }
-
-        .sidebar-menu-item {
-          padding: 12px 20px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          cursor: pointer;
-          color: white;
-          font-weight:500;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          transition: background-color 0.2s;
-          // background: none;
-          // border: none;
-          width: 100%;
-          // text-align: left;
-          user-select:none;
-          background: none;
-        }
-
-        .sidebar.collapsed .sidebar-menu-item {
-          justify-content: center;
-          padding: 12px 0;
-        } 
-
-        .sidebar-menu-item svg {
-            min-width: 20px;
-            min-height: 20px;
-        }
-        .main-content.collapsed {
-          margin-left: 0;
-        }
-
-        .navbar {
-          background: white; 
-          padding: 15px 25px; 
-          display: flex; 
-          justify-content: space-between; 
-          align-items: center;
-          box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
-          position: sticky; 
-          top: 0; 
-          z-index: 100;
-          width: 81vw;
-          // user-select:none;
-        }
-          
-        .navbar-left {
-          font-weight: 700; 
-          font-size: 1.5rem; 
+        /* Top Left Heading for the Page */
+        .page-title {
+          font-weight: 700;
+          font-size: 2rem; /* Larger font size for prominence */
           color: #222;
-          display: flex; 
-          align-items: center; 
-          gap: 10px;
+          padding: 20px; /* Padding around the title */
+          margin-bottom: 20px;
+          text-align: left; /* Align to top-left */
+          max-width: 1200px;
+          margin-left: auto;
+          margin-right: auto;
+          box-sizing: border-box;
         }
-        .navbar-right {
-          display: flex; 
-          align-items: center; 
-          gap: 15px; 
+        
+        /* Page Content Styles */
+        .page-content { 
+          width: 100%; 
+          max-width: 1200px; 
+          padding: 0 20px 20px; /* Adjusted padding, removed top padding */
+          margin: 0 auto; /* Center the content */
+          box-sizing: border-box;
+        }
+
+        .bg-white {
+          background-color: white;
+          border-radius: 12px;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+          padding: 20px;
+        }
+
+        .invoice-table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          font-size: 0.95rem; 
+          margin-top: 20px; 
+        }
+        .invoice-table thead { 
+          background: linear-gradient(125deg, #d2277e, #aa1bed); 
+          color: white; 
+          text-align: left; 
+        }
+        .invoice-table th, .invoice-table td { 
+          padding: 14px 18px; 
+          text-align: center; 
+          border-bottom: 1px solid #f0f0f0; 
+        }
+        .invoice-table tbody tr:last-child td { 
+          border-bottom: none; 
+        }
+        .invoice-table tbody tr:hover { 
+          background: #fdf2f8; 
+        }
+        .status-paid { 
+          background: #d1fae5; 
+          color: #065f46; 
           font-weight: 600; 
-          color: #555;
+          padding: 6px 12px; 
+          border-radius: 20px; 
+          display: inline-block; 
+          min-width: 80px; 
         }
-        .navbar-right button {
+        .status-pending { 
+          background: #fef3c7; 
+          color: #92400e; 
+          font-weight: 600; 
+          padding: 6px 12px; 
+          border-radius: 20px; 
+          display: inline-block; 
+          min-width: 80px; 
+        }
+        .download-button { 
           background: none; 
+          color: #6c63ff; 
+          font-weight: 600; 
           border: none; 
           cursor: pointer; 
-          color: #555; 
-          display: flex; 
-          align-items: center; 
-          gap: 6px; 
-          font-size: 1rem;
-          padding: 6px 12px; 
-          border-radius: 6px; 
-          transition: background-color 0.2s;
-          user-select:none;
+          padding: 8px 12px; 
+          border-radius: 8px; 
+          transition: background-color 0.2s, color 0.2s; 
         }
-        .navbar-right button:hover { 
-        background-color: #eee; 
+        .download-button:hover { 
+          background-color: #e0e7ff; 
+          color: #4f46e5; 
         }
-
-        .page-content {
-        width:100%;
-          padding: 20px;
-          color: black;
+        .not-available-text { 
+          color: #aaa; 
+          font-style: italic; 
+          padding: 8px 12px; 
         }
 
-        /* Container to allow full width */
-.invoice-table-container {
-  width: 100%;
-  margin-top: 30px;
-  padding: 0 20px; /* some padding from browser edges */
-  box-sizing: border-box;
-}
-
-/* Table full width */
-.invoice-table {
-  width: 97%;   /* 🔑 full width */
-  border-collapse: collapse;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  overflow: hidden;
-  font-size: 0.95rem;
-}
-
-/* Table Head */
-.invoice-table thead {
-  background: linear-gradient(125deg, #e374f4, #aa1bed);
-  color: white;
-  text-align: left;
-}
-
-.invoice-table th,
-.invoice-table td {
-  padding: 14px 18px;
-  text-align: center;
-}
-
-.invoice-table tbody tr {
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.invoice-table tbody tr:hover {
-  background: #f9f9ff;
-}
-
-/* Status badges */
-.status-paid {
-  background: #d1fae5;
-  color: #065f46;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-}
-
-.status-pending {
-  background: #fef3c7;
-  color: #92400e;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-}
-
-/* Action links */
-.download-link {
-  color: #6c63ff;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.download-link:hover {
-  color: #4f46e5;
-}
-
-.sidebar-menu-item.active {
-  background-color: #1f2937; 
-  color: #ffffff; 
-}
-
-
-
-        @media (max-width: 900px) {
-          .sidebar {
-            position: fixed;
-            height: 100%;
-            left: 0;
-            top: 0;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+          .page-title {
+            font-size: 1.5rem;
+            padding: 15px;
           }
-
-           .sidebar.open {
-            transform: translateX(0);
-          }
-
-          .main-content {
-            margin-left: 0 !important;
+          .invoice-table th, .invoice-table td {
+            padding: 8px 10px;
+            font-size: 0.85rem;
           }
         }
       `}</style>
 
-      <div className="dashboard-wrapper">
-        {/* Sidebar */}
-        <aside
-          className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""} 
-          //   isMobileMenuOpen ? "open" : ""
-          `}
-        >
-          <div className="sidebar-header">
-            {!isSidebarCollapsed ? (
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <button
-                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                  className="sidebar-toggle-btn"
-                >
-                  ☰
-                </button>
-                <h1 className="sidebar-title">AccuBillify</h1>
-              </div>
-            ) : (
-              <button
-                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                className="sidebar-toggle-btn"
-              >
-                ☰
-              </button>
-            )}
-          </div>
-          <ul className="sidebar-menu">
-            {/* {links.map((link, index) => (
-              <Link 
-              key={index}
-              to={link.path}
-              className="sidebar-menu-item">
-                {/* <span>{link.name}</span> */}
-              {/* </Link>
-            ))} */} 
-              <li>
-                <button 
-                className={sidebar-menu-item ${window.location.pathname === "/invoices" ? "active" : ""}}
-                onClick={() => navigate("/invoices")}
-                >
-
-              </li>
-              <li>
-                <button 
-                  className={sidebar-menu-item ${window.location.pathname === "/payments" ? "active" : ""}}
-                  onClick={() => navigate("/payments")}
-                  >
-                  <CreditCard size={20} />
-                  {!isSidebarCollapsed && <span>Payments</span>}
-                </button>
-              </li>
-            </ul>
-
-        </aside>
-
-        {/* Main Content */}
-        <main
-          className={main-content ${isSidebarCollapsed ? "collapsed" : ""}}
-        >
-
-          <nav className="navbar">
-            {/* <div className="navbar-left"> */}
-              {/* <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="sidebar-toggle-btn block md:hidden"
-              >
-                ☰
-              </button> */}
-              <div className="navbar-left">
-              
-              My Invoices
-            </div>
-            {/* </div> */}
-            <div className="navbar-right">
-              <button>
-                <UserCircle2 size={18} />
-                Profile
-              </button>
-              <button>
-                <LogOut size={18} />
-                Logout
-              </button>
-            </div>
-          </nav>
-
-          <div className="page-content">
-            {/* <Routes>
-              <Route path="payments" element={<MyPaymentsPage />} />
-              <Route path="profile" element={<CustomerProfile />} />
-            </Routes> */}
-            <div className="bg-white rounded-xl shadow p-6 max-w-4xl mx-auto">
-              {/* <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
-                My Invoices
-              </h1> */}
-                <table className="invoice-table">
-                  <thead>
-                    <tr>
-                      <th>Invoice ID</th>
-                      <th>Paid Date</th>
-                      <th>Due Date</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoices.map((inv) => (
-                      <tr key={inv.id}>
-                        <td>{inv.id}</td>
-                        <td>{inv.paidDate || "N/A"}</td>
-                        <td>{inv.dueDate}</td>
-                        <td>
-                          {inv.status === "Paid" ? (
-                            <span className="status-paid">Paid</span>
-                          ) : (
-                            <span className="status-pending">Pending</span>
-                          )}
-                        </td>
-                        {/* <td>{inv.dueDate}</td> */}
-                        
-                        <td>
-                          {inv.status === "Paid" ? (
-                            <button
-// FIX: The onClick handler must pass the current invoice object 'inv' to the function.
-// This is the key change that enables the download function to use the correct data for each row.
-  onClick={() => generateInvoicePDF(inv)}
-  style={{ background: "none", color: "#6c63ff", fontWeight: 600, border: "none", cursor: "pointer" }}
->
-  Download
-</button>
-                          ) : (
-                            <span style={{ color: "#aaa", fontStyle: "italic" }}>
-                              Not Available
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                </div>
-            </div>
-        </main>
+      {/* Main Content wrapper */}
+      <div className="main-content-wrapper">
+        <h1 className="page-title">My Invoices</h1> {/* Added page title here */}
         
+        <div className="page-content">
+          <div className="bg-white">
+            <table className="invoice-table">
+              <thead>
+                <tr>
+                  <th>Invoice ID</th>
+                  <th>Paid Date</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayInvoices.map((inv) => (
+                  <tr key={inv.id}>
+                    <td>{inv.id}</td>
+                    <td>{inv.paidDate || "N/A"}</td>
+                    <td>{inv.dueDate}</td>
+                    <td>
+                      {inv.status === "Paid" ? (
+                        <span className="status-paid">Paid</span>
+                      ) : inv.status === "Partially Paid" ? (
+                        <span className="status-pending">Partially Paid</span>
+                      ) : (
+                        <span className="status-pending">Pending</span>
+                      )}
+                    </td>
+                    <td>
+                      {inv.status !== "Pending" ? (
+                        <button
+                          onClick={() => generateInvoicePDF(inv)}
+                          className="download-button"
+                        >
+                          Download
+                        </button>
+                      ) : (
+                        <span className="not-available-text">
+                          Not Available
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </>
   );

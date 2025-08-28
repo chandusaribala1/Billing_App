@@ -1,533 +1,499 @@
 import React, { useState } from "react";
-import { Routes, Route, Link } from "react-router-dom";
-import { UserCircle2, LogOut, FileText, CreditCard } from "lucide-react";
-import MyPaymentsPage from "./MyPaymentsPage";
-import CustomerProfile from "./CustomerProfile";
-import { useNavigate } from "react-router-dom";
-import jsPDF from "jspdf";
-import "jspdf-autotable"; 
+import { QRCodeCanvas } from "qrcode.react";
+// Removed UserCircle2, LogOut as navbar is removed
+// Removed useNavigate as navigation links are no longer present
 
-
-
-const generateInvoicePDF = (invoice) => {
-  console.log("Download function triggered ✅");
-
-
-  const doc = new jsPDF();
-
-  // 🏢 Company Details
-  doc.setFontSize(22);
-  doc.setTextColor("#aa1bed");
-  doc.text("INVOICE", 14, 20);
-
-  doc.setFontSize(14);
-  doc.setTextColor("#000");
-  doc.text("AccuBillify", 14, 30);
-  doc.setFontSize(11);
-  doc.text("Bangalore, India", 14, 36);
-  doc.text("Mobile: 0000000000", 14, 42);
-  doc.text("Email: info@accubillify.com", 14, 48);
-
-  // 📄 Invoice Info
-  doc.setTextColor("#d2277e");
-  doc.text("Bill To:", 14, 60);
-  doc.text("Green1 Materials LLC", 14, 66);
-  doc.text("#34, Car Street", 14, 72);
-  doc.text("City Park", 14, 78);
-  doc.text("Hong Kong", 14, 84);
-
-  doc.setFontSize(11);
-  doc.text("Invoice No :", 145, 75);
-  // FIX: Use the 'id' from the passed 'invoice' object.
-  doc.text(invoice.id, 180, 75, { align: "right" })  
-  doc.text("Invoice Date :", 145, 81);
-  // FIX: Use the 'paidDate' from the passed 'invoice' object.
-  doc.text(invoice.paidDate, 180, 81, { align: "right" })  
-  doc.text("Due Date :", 145, 87);
-  // FIX: Use the 'dueDate' from the passed 'invoice' object.
-  doc.text(invoice.dueDate, 180, 87, { align: "right" })  
-  // ✅ ✅ ✅ FIX: Correct use of autoTable via doc.autoTable
-  doc.autoTable({
-   startY: 95,
-   head: [["Sl.", "Description", "Qty", "Rate", "Amount"]],
-   body: [
-     ["1", "Desktop furniture", "1", "$232.00", "$232.00"],
-     ["2", "Plumbing and electrical services", "2", "$514.00", "$1028.00"],
-     ["3", "Water tank repair works", "2", "$152.00", "$304.00"]
-   ],
-   theme: 'grid',
-   headStyles: {
-     fillColor: "#d2277e",
-     textColor: "#ffffff",
-     fontStyle: 'bold',
-     halign: 'center'
-   },
-   styles: {
-     halign: 'center',
-     cellPadding: 4
-   }
+const MyPaymentPage = () => {
+  const [products, setProducts] = useState([]);
+  const [productName, setProductName] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [price, setPrice] = useState("");
+  const [history, setHistory] = useState([]);
+  const [showGatewayModal, setShowGatewayModal] = useState(false);
+  const [message, setMessage] = useState("");
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [showCardForm, setShowCardForm] = useState(false);
+  const [cardDetails, setCardDetails] = useState({
+    number: "",
+    bank: "",
+    holder: "",
+    expiry: "",
+    pin: "",
   });
-  const finalY = doc.lastAutoTable.finalY + 10;
 
-  // === Totals Section ===
-  doc.setFontSize(11);
-  doc.text("Subtotal", 145, finalY);
-  doc.text("$1,564.00", 180, finalY);
+  const [step, setStep] = useState(1);
 
-  doc.text("Total", 145, finalY + 6);
-  doc.text("$1,564.00", 180, finalY + 6);
+  const addProduct = () => {
+    if (!productName || !quantity || !price) {
+      setMessage("⚠ Please fill all product details.");
+      return;
+    }
 
-  doc.text("Paid (Jun 22, 2021)", 145, finalY + 12);
-  doc.text("$232.00", 180, finalY + 12);
+    const newProduct = {
+      id: products.length + 1,
+      name: productName,
+      qty: parseInt(quantity),
+      price: parseFloat(price),
+      total: parseInt(quantity) * parseFloat(price),
+    };
 
-  doc.setTextColor("#d2277e");
-  doc.text("Balance Due", 145, finalY + 18);
-  doc.text("$1,332.00", 180, finalY + 18);
-  doc.setTextColor("#000000");
+    setProducts([...products, newProduct]);
+    setProductName("");
+    setQuantity("");
+    setPrice("");
+    setMessage("");
+    setStep(2);
+  };
 
-  // === Payment Instructions ===
-  doc.setFontSize(11);
-  doc.setTextColor("#d2277e");
-  doc.text("Payment Instructions", 14, finalY + 30);
-  doc.setTextColor("#000");
-  doc.text("Pay Cheque to", 14, finalY + 36);
-  doc.text("John Doe", 14, finalY + 42);
+  const totalAmount = products.reduce((sum, p) => sum + p.total, 0);
 
-  // === Footer Signature ===
-  doc.text("Authorized Signatory", 150, 280);
+  const handlePay = () => {
+    if (products.length === 0) {
+      setMessage("⚠ Please add products before payment.");
+      return;
+    }
+    setShowGatewayModal(true);
+    setShowQRCode(false);
+    setShowCardForm(false);
+  };
 
-  // === Save as PDF ===
-  doc.save(${invoice.id}_AccuBillify_Invoice.pdf);
-};
+  const handleGatewaySelect = (option) => {
+    if (option === "QR Code") {
+      setShowQRCode(true);
+      setShowCardForm(false);
+    } else if (option === "Card") {
+      setShowCardForm(true);
+      setShowQRCode(false);
+    }
+  };
+
+  const handleCardPayment = () => {
+    if (
+      !cardDetails.number ||
+      !cardDetails.bank ||
+      !cardDetails.holder ||
+      !cardDetails.expiry ||
+      !cardDetails.pin
+    ) {
+      setMessage("⚠ Please fill all card details.");
+      return;
+    }
+
+    if (!/^\d{16}$/.test(cardDetails.number)) {
+      setMessage("⚠ Card number must be 16 digits.");
+      return;
+    }
+
+    if (!/^\d{4}$/.test(cardDetails.pin)) {
+      setMessage("⚠ PIN must be 4 digits.");
+      return;
+    }
+
+    const today = new Date();
+    const expiryDate = new Date(cardDetails.expiry + "-01");
+    if (expiryDate <= today) {
+      setMessage("⚠ Card expiry date must be in the future.");
+      return;
+    }
+
+    const newPayment = {
+      id: history.length + 1,
+      amount: totalAmount,
+      date: new Date().toLocaleDateString(),
+      method: "Card",
+    };
+    setHistory([...history, newPayment]);
+    setMessage(`✅ Payment of ${totalAmount} INR successful via Card`);
+    setShowGatewayModal(false);
+    setShowCardForm(false);
+    setProducts([]);
+    setCardDetails({ number: "", bank: "", holder: "", expiry: "", pin: "" });
+    setStep(1);
+  };
 
 
-
-// const links = [
-//     { name: "Invoices", path: "invoices" },
-//     { name: "Payments", path: "payments" },
-//     { name: "Profile", path: "profile" },
-//   ];
-
-const invoices = [
-  {
-    id: "INV-001",
-    status: "Paid",
-    dueDate: "2023-10-25",
-    paidDate: "2023-10-26",
-  },
-  {
-    id: "INV-002",
-    status: "Pending",
-    dueDate: "2023-11-15",
-    paidDate: null,
-  },
-];
-
-const MyInvoicesPage = () => {
-  const navigate = useNavigate();
-  //  const [activePage, setActivePage] = useState("dashboard");
-   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  // const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const handleQRCodePaymentConfirmed = () => {
+    const newPayment = {
+      id: history.length + 1,
+      amount: totalAmount,
+      date: new Date().toLocaleDateString(),
+      method: "QR Code",
+    };
+    setHistory([...history, newPayment]);
+    setMessage(`✅ Payment of ${totalAmount} INR successful via QR Code`);
+    setShowGatewayModal(false);
+    setShowQRCode(false);
+    setProducts([]);
+    setStep(1);
+  };
 
   return (
     <>
       <style>{`
-      body, html, #root {
-          margin: 0; 
-          padding: 0; 
-          height: 100%; 
-          width: 100vw;
+        body, html, #root {
+          width:100vw;
+          margin: 0;
+          padding: 0;
+          height: 100%;
           font-family: Arial, sans-serif;
+          color: black;
+          background-color: #f8f9fa; /* Light background for the entire page */
         }
 
-        .dashboard-wrapper {
-          // width: 100vw;
-          display: flex;
-          height: 100vh;
-          overflow: hidden;
+        /* Top Left Heading for the Page */
+        .page-title {
+          font-weight: 700;
+          font-size: 2rem; /* Larger font size for prominence */
+          color: #222;
+          padding: 20px; /* Padding around the title */
+          margin-bottom: 20px;
+          text-align: left; /* Align to top-left */
+          max-width: 1200px;
+          margin-left: auto;
+          margin-right: auto;
+          box-sizing: border-box;
+        }
+        
+        .payment-page {
+          max-width: 800px;
+          margin: 20px auto;
+          padding: 20px;
+          background: #f9fafb;
+          border-radius: 12px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
-        .sidebar {
-          background: linear-gradient(125deg, #e374f4, #aa1bed, #844582, #a6dff4);
+        .product-form,
+        .product-list,
+        .history-section {
+          margin-bottom: 20px auto;
+          max-width: 900px;
+          padding: 20px;
+          background: white;
+          border-radius: 12px;
+          text-align: center;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-list h3,
+        .history-section h3,
+        .product-form h3 {
+          margin-bottom: 15px;
+          font-size: 1.3rem;
+          font-weight: 600;
+          color: #111;
+          text-align: left;
+        }
+        .product-list h4 {
+          margin-top: 15px;
+          font-size: 1rem;
+          font-weight: bold;
+        }
+
+        .product-list table,
+        .history-section table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
+        }
+
+        .product-list th,
+        .history-section th {
+          width: 10%;
+          margin: 20px;
+          background: linear-gradient(125deg, #e374f4, #aa1bed);
           color: white;
-          width: 240px;
-          flex-shrink: 0;
+          padding: 10px;
+        }
+
+        .product-list td,
+        .history-section td {
+          padding: 10px;
+          border: 1px solid #ddd;
+          text-align: center;
+        }
+
+        input,
+        button {
+          margin: 8px 0;
+          padding: 10px;
+          width: 95%;
+          border-radius: 6px;
+          border: 1px solid #ccc;
+          box-sizing: border-box;
+        }
+        .product-form button,
+        .product-list button {
+          background: linear-gradient(125deg, #e374f4, #aa1bed);
+          border: none;
+          color: white;
+          font-weight: bold;
+          cursor: pointer;
+          margin-top: 10px;
+          width: 100%;
+          transition: background-color 0.3s ease;
+        }
+        .product-form button:hover,
+        .product-list button:hover {
+          background: linear-gradient(125deg, #aa1bed, #e374f4);
+        }
+        .message {
+          padding: 10px;
+          background: linear-gradient(125deg, #e374f4, #aa1bed);
+          color: white;
+          border-radius: 6px;
+          margin-top: 15px;
+          font-weight: bold;
+        }
+
+        /* Table */
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
+        }
+        table,
+        th,
+        td {
+          border: 1px solid #ddd;
+        }
+        th,
+        td {
+          padding: 8px;
+          text-align: center;
+        }
+        th {
+          background: linear-gradient(125deg, #e374f4, #aa1bed);
+          color: white;
+        }
+
+        /* Modal */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        .modal {
+          background: white;
+          padding: 20px;
+          border-radius: 10px;
+          width: 400px;
+          text-align: center;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+          position: relative;
+        }
+        .qr-code-container {
           display: flex;
           flex-direction: column;
-          transition: width 0.3s ease;
-          // position: relative;
-        }
-
-        .sidebar.collapsed {
-          width: 60px;
-          // display: none;
-        }
-
-        .sidebar-header {
-          padding: 20px;
-          font-size: 1.5rem;
-          text-align: center;
-          border-bottom: 1px solid #3e4e5e; 
-          user-select:none;
-        }
-
-        .sidebar-toggle-btn {
-          background: fixed;
-          border: none;
-          cursor: pointer;
-          color: #f8f2f2ff;
-          font-size: 1.5rem;
-          margin-right:12px;
-          padding: 5px;
-        }
-
-        .sidebar-title {
-          font-size: 1.8rem;
-          font-weight: bold;
-          color: white;
-          margin-left: 10px;
-        }
-
-        .sidebar-menu {
-          flex-grow: 1;
-          padding:10px 0;
-        }
-
-        .sidebar-menu-item {
-          padding: 12px 20px;
-          display: flex;
           align-items: center;
-          gap: 12px;
-          cursor: pointer;
-          color: white;
-          font-weight:500;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          transition: background-color 0.2s;
-          // background: none;
-          // border: none;
-          width: 100%;
-          // text-align: left;
-          user-select:none;
-          background: none;
-        }
-
-        .sidebar.collapsed .sidebar-menu-item {
           justify-content: center;
-          padding: 12px 0;
-        } 
-
-        .sidebar-menu-item svg {
-            min-width: 20px;
-            min-height: 20px;
         }
-        .main-content.collapsed {
-          margin-left: 0;
+        .qr-code-container canvas {
+          margin: 20px 0;
         }
-
-        .navbar {
-          background: white; 
-          padding: 15px 25px; 
-          display: flex; 
-          justify-content: space-between; 
-          align-items: center;
-          box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
-          position: sticky; 
-          top: 0; 
-          z-index: 100;
-          width: 81vw;
-          // user-select:none;
-        }
-          
-        .navbar-left {
-          font-weight: 700; 
-          font-size: 1.5rem; 
-          color: #222;
-          display: flex; 
-          align-items: center; 
+        .gateway-buttons {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
           gap: 10px;
+          margin: 15px 0;
         }
-        .navbar-right {
-          display: flex; 
-          align-items: center; 
-          gap: 15px; 
-          font-weight: 600; 
-          color: #555;
+        .gateway-buttons button,
+        .qr-code-container button {
+          background: linear-gradient(125deg, #e374f4, #aa1bed);
+          color: white;
+          font-weight: bold;
+          padding: 10px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
         }
-        .navbar-right button {
-          background: none; 
-          border: none; 
-          cursor: pointer; 
-          color: #555; 
-          display: flex; 
-          align-items: center; 
-          gap: 6px; 
-          font-size: 1rem;
-          padding: 6px 12px; 
-          border-radius: 6px; 
-          transition: background-color 0.2s;
-          user-select:none;
+        .gateway-buttons button:hover,
+        .qr-code-container button:hover {
+          background: linear-gradient(125deg, #aa1bed, #e374f4);
         }
-        .navbar-right button:hover { 
-        background-color: #eee; 
+        .close-btn {
+          background: #ef4444;
+          color: white;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          margin-top: 10px;
+          transition: background-color 0.3s ease;
         }
-
-        .page-content {
-        width:100%;
-          padding: 20px;
-          color: black;
+        .close-btn:hover {
+          background: #dc2626;
         }
-
-        /* Container to allow full width */
-.invoice-table-container {
-  width: 100%;
-  margin-top: 30px;
-  padding: 0 20px; /* some padding from browser edges */
-  box-sizing: border-box;
-}
-
-/* Table full width */
-.invoice-table {
-  width: 97%;   /* 🔑 full width */
-  border-collapse: collapse;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  overflow: hidden;
-  font-size: 0.95rem;
-}
-
-/* Table Head */
-.invoice-table thead {
-  background: linear-gradient(125deg, #e374f4, #aa1bed);
-  color: white;
-  text-align: left;
-}
-
-.invoice-table th,
-.invoice-table td {
-  padding: 14px 18px;
-  text-align: center;
-}
-
-.invoice-table tbody tr {
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.invoice-table tbody tr:hover {
-  background: #f9f9ff;
-}
-
-/* Status badges */
-.status-paid {
-  background: #d1fae5;
-  color: #065f46;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-}
-
-.status-pending {
-  background: #fef3c7;
-  color: #92400e;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-}
-
-/* Action links */
-.download-link {
-  color: #6c63ff;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.download-link:hover {
-  color: #4f46e5;
-}
-
-.sidebar-menu-item.active {
-  background-color: #1f2937; 
-  color: #ffffff; 
-}
-
-
-
-        @media (max-width: 900px) {
-          .sidebar {
-            position: fixed;
-            height: 100%;
-            left: 0;
-            top: 0;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-          }
-
-           .sidebar.open {
-            transform: translateX(0);
-          }
-
-          .main-content {
-            margin-left: 0 !important;
-          }
+        /* Card Form Specific Styles */
+        .modal input {
+          margin: 10px auto;
+          display: block;
+          width: calc(100% - 20px);
         }
       `}</style>
 
-      <div className="dashboard-wrapper">
-        {/* Sidebar */}
-        <aside
-          className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""} 
-          //   isMobileMenuOpen ? "open" : ""
-          `}
-        >
-          <div className="sidebar-header">
-            {!isSidebarCollapsed ? (
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <button
-                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                  className="sidebar-toggle-btn"
-                >
-                  ☰
-                </button>
-                <h1 className="sidebar-title">AccuBillify</h1>
-              </div>
-            ) : (
-              <button
-                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                className="sidebar-toggle-btn"
-              >
-                ☰
-              </button>
-            )}
+      <h1 className="page-title">My Payments</h1> {/* "My Payments" title */}
+
+      {/* Payment Section */}
+      <div className="payment-page">
+        {step === 1 && (
+          <div className="product-form">
+            <h3>Enter Product Details</h3>
+            <input
+              type="text"
+              placeholder="Product Name"
+              value={productName}
+              onChange={(e) => setProductName(e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Quantity"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+            />
+            <input
+              type="number"
+              placeholder="Price"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+            <button onClick={addProduct}>Add Product</button>
           </div>
-          <ul className="sidebar-menu">
-            {/* {links.map((link, index) => (
-              <Link 
-              key={index}
-              to={link.path}
-              className="sidebar-menu-item">
-                {/* <span>{link.name}</span> */}
-              {/* </Link>
-            ))} */} 
-              <li>
-                <button 
-                  className={sidebar-menu-item ${window.location.pathname === "/invoices" ? "active" : ""}}
-                  onClick={() => navigate("/invoices")}
-                >
-                  <FileText size={20} />
-                  {!isSidebarCollapsed && <span>Invoices</span>}
-                </button>
-              </li>
-              <li>
-                <button 
-                  className={sidebar-menu-item ${window.location.pathname === "/payments" ? "active" : ""}}
-                  onClick={() => navigate("/payments")}
-                >
-                  <CreditCard size={20} />
-                  {!isSidebarCollapsed && <span>Payments</span>}
-                </button>
-              </li>
-            </ul>
+        )}
 
-        </aside>
+        {step === 2 && (
+          <div className="product-list">
+            <h3>Products Added</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.id}</td>
+                    <td>{p.name}</td>
+                    <td>{p.qty}</td>
+                    <td>{p.price}</td>
+                    <td>{p.total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <h4>Total Amount: {totalAmount} INR</h4>
+            <button onClick={handlePay}>Proceed to Pay</button>
+            <button onClick={() => setStep(1)}>← Back</button>
+          </div>
+        )}
 
-        {/* Main Content */}
-        <main
-          className={main-content ${isSidebarCollapsed ? "collapsed" : ""}}
-        >
-          <nav className="navbar">
-            {/* <div className="navbar-left"> */}
-              {/* <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="sidebar-toggle-btn block md:hidden"
-              >
-                ☰
-              </button> */}
-              <div className="navbar-left">
-              
-              My Invoices
-            </div>
-            {/* </div> */}
-            <div className="navbar-right">
-              <button>
-                <UserCircle2 size={18} />
-                Profile
-              </button>
-              <button>
-                <LogOut size={18} />
-                Logout
-              </button>
-            </div>
-          </nav>
-
-          <div className="page-content">
-             {/* <Routes>
-              <Route path="payments" element={<MyPaymentsPage />} />
-              <Route path="profile" element={<CustomerProfile />} />
-            </Routes> */}
-            <div className="bg-white rounded-xl shadow p-6 max-w-4xl mx-auto">
-              {/* <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
-                My Invoices
-              </h1> */}
-                <table className="invoice-table">
-                  <thead>
-                    <tr>
-                      <th>Invoice ID</th>
-                      <th>Paid Date</th>
-                      <th>Due Date</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoices.map((inv) => (
-                      <tr key={inv.id}>
-                        <td>{inv.id}</td>
-                        <td>{inv.paidDate || "N/A"}</td>
-                        <td>{inv.dueDate}</td>
-                        <td>
-                          {inv.status === "Paid" ? (
-                            <span className="status-paid">Paid</span>
-                          ) : (
-                            <span className="status-pending">Pending</span>
-                          )}
-                        </td>
-                        {/* <td>{inv.dueDate}</td> */}
-                        
-                        <td>
-                          {inv.status === "Paid" ? (
-                            <button
-// FIX: The onClick handler must pass the current invoice object 'inv' to the function.
-// This is the key change that enables the download function to use the correct data for each row.
-  onClick={() => generateInvoicePDF(inv)}
-  style={{ background: "none", color: "#6c63ff", fontWeight: 600, border: "none", cursor: "pointer" }}
->
-  Download
-</button>
-
-
-
-
-
-                          ) : (
-                            <span style={{ color: "#aaa", fontStyle: "italic" }}>
-                              Not Available
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                </div>
-            </div>
-        </main>
+        {message && <p className="message">{message}</p>}
       </div>
+
+      {/* Gateway Modal */}
+      {showGatewayModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            {!showQRCode && !showCardForm ? (
+              <>
+                <h3>Select Payment Gateway</h3>
+                <div className="gateway-buttons">
+                  <button onClick={() => handleGatewaySelect("QR Code")}>
+                    QR Code
+                  </button>
+                  <button onClick={() => handleGatewaySelect("Card")}>
+                    Card
+                  </button>
+                </div>
+              </>
+            ) : showQRCode ? (
+              <>
+                <h3>Scan QR Code to Pay</h3>
+                <div className="qr-code-container">
+                  <QRCodeCanvas
+                    value={`upi://pay?pa=merchant@upi&pn=AccuBillify&am=${totalAmount}&cu=INR`}
+                    size={200}
+                  />
+                  <p>Scan this code with your UPI app.</p>
+                  <button onClick={handleQRCodePaymentConfirmed}>
+                    Payment Confirmed
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3>Enter Card Details</h3>
+                <input
+                  type="text"
+                  placeholder="Card Number (16 digits)"
+                  value={cardDetails.number}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, number: e.target.value })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Bank Name"
+                  value={cardDetails.bank}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, bank: e.target.value })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Account Holder Name"
+                  value={cardDetails.holder}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, holder: e.target.value })
+                  }
+                />
+                <input
+                  type="month"
+                  placeholder="Expiry Date"
+                  value={cardDetails.expiry}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, expiry: e.target.value })
+                  }
+                />
+                <input
+                  type="password"
+                  placeholder="PIN (4 digits)"
+                  value={cardDetails.pin}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, pin: e.target.value })
+                  }
+                />
+                <button onClick={handleCardPayment}>Confirm Payment</button>
+              </>
+            )}
+            <button
+              className="close-btn"
+              onClick={() => {
+                setShowGatewayModal(false);
+                setShowQRCode(false);
+                setShowCardForm(false);
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
-export default MyInvoicesPage;
+export default MyPaymentPage;

@@ -29,13 +29,10 @@ const AccountantDashboard = () => {
         </div>
         <div className="sidebar-menu">
           {links.map((link, index) => (
-            <Link
-              key={index}
-              to={link.path}
-              className="sidebar-menu-item"
-            >
-              <span>{link.name}</span>
-            </Link>
+            <Link key={index} to={`/accountant/${link.path}`} className="sidebar-menu-item">
+  <span>{link.name}</span>
+</Link>
+
           ))}
         </div>
       </nav>
