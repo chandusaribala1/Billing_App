@@ -3,14 +3,14 @@ import { Routes, Route, Link } from "react-router-dom";
 import { Menu } from "lucide-react";
 import MyInvoicesPage from "./MyInvoicesPage.jsx";
 import MyPaymentsPage from "./MyPaymentsPage.jsx";
-import CustomerProfile from "./CustomerProfile.jsx"
+import CustomerProfile from "./CustomerProfile.jsx";
 
 const CustomerDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const links = [
-    { name: "Invoices", path: "/" },
-    { name: "Payments", path: "payments" },
+    { name: "My Invoices", path: "invoices" },
+    { name: "My Payments", path: "payments" },
     { name: "Profile", path: "profile" },
   ];
 
@@ -43,7 +43,7 @@ const CustomerDashboard = () => {
       {/* Main Content */}
       <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
         <header className="navbar">
-          <div className="navbar-left">Accountant Dashboard</div>
+          <div className="navbar-left">Customer Dashboard</div>
           <div className="navbar-right">
             <Link to="/">Home</Link>
             <Link to="/login">Logout</Link>
@@ -53,6 +53,7 @@ const CustomerDashboard = () => {
         <div className="page-content">
           <Routes>
             <Route path="/" element={<MyInvoicesPage />} />
+            <Route path="invoices" element={<MyInvoicesPage />} />
             <Route path="payments" element={<MyPaymentsPage />} />
             <Route path="profile" element={<CustomerProfile />} />
           </Routes>
@@ -68,7 +69,6 @@ const CustomerDashboard = () => {
           font-family: Arial, sans-serif;
         }
 
-        /* Sidebar styling like AdminDashboard */
         .sidebar {
           background: linear-gradient(125deg, #e374f4, #aa1bed, #844582, #a6dff4);
           color: white;
@@ -114,7 +114,6 @@ const CustomerDashboard = () => {
           display: none;
         }
 
-        /* Main Content */
         .main-content {
           flex-grow: 1;
           background: #f4f6f8;
@@ -126,7 +125,6 @@ const CustomerDashboard = () => {
           margin-left: 12px;
         }
 
-        /* Navbar styling like AdminDashboard */
         .navbar {
           background: white;
           padding: 15px 25px;
@@ -158,12 +156,10 @@ const CustomerDashboard = () => {
           border-radius: 6px;
         }
 
-        /* Page Content */
         .page-content {
           padding: 20px;
         }
 
-        /* Responsive behavior */
         @media (max-width: 900px) {
           .sidebar {
             position: fixed;
