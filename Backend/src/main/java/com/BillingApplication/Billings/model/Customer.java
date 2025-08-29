@@ -1,4 +1,5 @@
 package com.BillingApplication.Billings.model;
+import java.time.LocalDate;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,14 +15,18 @@ public class Customer {
    @Column(unique=true) private String email; 
    private String phone;
    private String address;
+   private LocalDate dateofbirth;
+   private String country;
    public Customer() {
 }
-   public Customer(Long id, String name, String email, String phone,String address) {
+   public Customer(Long id, String name, String email, String phone,String address,LocalDate dateofbirth,String country) {
     this.id = id;
     this.name = name;
     this.email = email;
     this.phone = phone;
     this.address=address;
+    this.dateofbirth=dateofbirth;
+    this.country=country;
 }
    public Long getId() {
     return id;
@@ -52,6 +57,18 @@ public class Customer {
    }
    public void setAddress(String address) {
       this.address = address;
+   }
+   public LocalDate getDateofbirth() {
+      return dateofbirth;
+   }
+   public void setDateofbirth(LocalDate dateofbirth) {
+      this.dateofbirth = dateofbirth;
+   }
+   public String getCountry() {
+      return country;
+   }
+   public void setCountry(String country) {
+      this.country = country;
    }
    
 }

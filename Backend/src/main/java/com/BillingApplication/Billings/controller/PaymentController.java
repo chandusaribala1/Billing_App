@@ -58,14 +58,22 @@ public class PaymentController {
     ) {
         return service.createExternalPayment(gateway, invoiceId, amount, currency);
     }
-    @PostMapping("/external/{gateway}/verify")
-    public boolean verifyExternal(
-            @PathVariable String gateway,
-            @RequestBody Map<String, Object> payload,
-            @RequestHeader Map<String, String> headers
-    ) throws Exception {
-        return service.verifyExternalPayment(gateway, payload, headers);
+   @PostMapping(value = "/external/{gateway}/verify", consumes = "application/json")
+public boolean verifyExternal(
+        @PathVariable String gateway,
+        @RequestBody(required = false) String rawBody,
+        @RequestHeader Map<String, String> headers
+) throws Exception {
+    Map<String, Object> payload;
+    if (rawBody == null || rawBody.isBlank()) {
+        payload = Map.of();
+    } else {
+        com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
+        payload = om.readValue(rawBody, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+        payload.put("rawBody", rawBody);
     }
+    return service.verifyExternalPayment(gateway, payload, headers);
+}
     @GetMapping("/me")
     public List<Payment> myPayments(@AuthenticationPrincipal UserDetails userDetails) {
         User user = users.findByUsername(userDetails.getUsername())

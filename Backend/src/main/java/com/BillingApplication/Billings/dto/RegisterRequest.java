@@ -1,5 +1,7 @@
 package com.BillingApplication.Billings.dto;
 
+import java.time.LocalDate;
+
 public class RegisterRequest {
      private String username;
      private String email;
@@ -7,15 +9,19 @@ public class RegisterRequest {
     private String phone;
     private String role;
     private String address;
+    private LocalDate dateofbirth;
+    private String country;
     public RegisterRequest() {
     }
-    public RegisterRequest(String username,String email, String password, String role,String phone,String address) {
+    public RegisterRequest(String username,String email, String password, String role,String phone,String address,LocalDate dateofbirth,String country) {
         this.username = username;
          this.email = email;
         this.password = password;
         this.role = role;
         this.phone=phone;
         this.address=address;
+        this.dateofbirth=dateofbirth;
+        this.country=country;
     }
     public String getUsername() {
         return username;
@@ -52,6 +58,18 @@ public class RegisterRequest {
 
     public String getAddress() {
         return address;
+    }
+    public LocalDate getDateofbirth() {
+        return dateofbirth;
+    }
+    public void setDateofbirth(LocalDate dateofbirth) {
+        this.dateofbirth = dateofbirth;
+    }
+    public String getCountry() {
+        return country;
+    }
+    public void setCountry(String country) {
+        this.country = country;
     }
     
 

@@ -25,8 +25,9 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/invoices/me", "/payments/me").hasAuthority("CUSTOMER")
+                .requestMatchers("/invoices/me", "/payments/me","/customers/me/update").hasAuthority("CUSTOMER")
                 .requestMatchers("/users/**").hasAuthority("ADMIN")
+                .requestMatchers("/payments/external/**").hasAnyAuthority("CUSTOMER")
                 .requestMatchers("/reports/**").hasAnyAuthority("ADMIN", "ACCOUNTANT")
                 .requestMatchers("/products/**", "/customers/**", "/invoices/**", "/payments/**").hasAnyAuthority("ADMIN", "ACCOUNTANT")
                 .anyRequest().authenticated()

@@ -3,6 +3,8 @@ package com.BillingApplication.Billings.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,15 +15,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.BillingApplication.Billings.dto.CustomerUpdateRequest;
 import com.BillingApplication.Billings.model.Customer;
+import com.BillingApplication.Billings.model.User;
+import com.BillingApplication.Billings.repository.CustomerRepository;
+import com.BillingApplication.Billings.repository.UserRepository;
 import com.BillingApplication.Billings.service.CustomerService;
 
 @RestController @RequestMapping("/customers")
 public class CustomerController {
     private final CustomerService service; 
-    public CustomerController(CustomerService service)
-    {
-        this.service=service;
+    private final UserRepository userRepo;
+    private final CustomerRepository customerRepo;
+
+    public CustomerController(CustomerService service,
+                              UserRepository userRepo,
+                              CustomerRepository customerRepo) {
+        this.service = service;
+        this.userRepo = userRepo;
+        this.customerRepo = customerRepo;
     }
     @PostMapping 
     public ResponseEntity<Customer> create(@RequestBody Customer c)
@@ -58,6 +70,17 @@ public class CustomerController {
   { 
     return ResponseEntity.ok(service.searchByEmail(q)); 
 }
+ @PutMapping("/me/update")
+    public ResponseEntity<Customer> updateMyProfile(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody CustomerUpdateRequest updateRequest) {
 
+        User user = userRepo.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        Customer customer = customerRepo.findByEmail(user.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+
+        return ResponseEntity.ok(service.updateCustomerProfile(customer, updateRequest));
+    }
 }

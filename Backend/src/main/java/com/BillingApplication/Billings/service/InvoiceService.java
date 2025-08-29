@@ -30,8 +30,6 @@ public class InvoiceService {
         this.customerRepo = customerRepo;
         this.productRepo = productRepo;
     }
-
-    // ---------------- CREATE INVOICE ----------------
     @Transactional
     public Invoice createInvoice(CreateInvoiceRequest req) {
         Customer customer = customerRepo.findById(req.getCustomerId())
@@ -47,8 +45,6 @@ public class InvoiceService {
 
         return invoiceRepo.save(invoice);
     }
-
-    // ---------------- UPDATE INVOICE ----------------
     @Transactional
     public Invoice updateInvoice(Long id, CreateInvoiceRequest req) {
         Invoice invoice = invoiceRepo.findById(id)
@@ -61,14 +57,12 @@ public class InvoiceService {
 
         return invoiceRepo.save(invoice);
     }
-
-    // ---------------- ADD / UPDATE ITEMS ----------------
     @Transactional
     private BigDecimal addOrUpdateInvoiceItems(Invoice invoice, List<InvoiceItemRequest> itemsReq) {
-        if (itemsReq == null) itemsReq = new ArrayList<>(); // handle null
+        if (itemsReq == null) itemsReq = new ArrayList<>();
 
         List<InvoiceItem> existingItems = invoice.getItems();
-        existingItems.clear(); // safe because initialized in entity
+        existingItems.clear(); 
 
         BigDecimal total = BigDecimal.ZERO;
 

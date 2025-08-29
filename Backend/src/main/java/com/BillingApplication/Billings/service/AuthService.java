@@ -1,5 +1,7 @@
 package com.BillingApplication.Billings.service;
 
+import java.util.Optional;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,11 +46,14 @@ public class AuthService {
         u.setPassword(encoder.encode(req.getPassword()));
         u.setRole("CUSTOMER");
         users.save(u);
+
         Customer c = new Customer();
         c.setName(req.getUsername());
         c.setEmail(req.getEmail());
         c.setPhone(req.getPhone());
         c.setAddress(req.getAddress());
+        c.setDateofbirth(req.getDateofbirth());
+        c.setCountry(req.getCountry());
         customers.save(c);
         String token = jwt.generateToken(u.getEmail());
         return new AuthResponse(token, u.getRole(), u.getId());
@@ -72,4 +77,7 @@ public class AuthService {
         user.setRole(role.toUpperCase());
         return users.save(user);
     }
+    public Optional<User> findByEmail(String email) {
+    return users.findByEmail(email);
+}
 }

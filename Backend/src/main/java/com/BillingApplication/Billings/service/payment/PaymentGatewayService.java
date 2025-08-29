@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 public class PaymentGatewayService {
 
     private final Map<String, PaymentGateway> gateways;
+
     public PaymentGatewayService(Map<String, PaymentGateway> gateways) {
         this.gateways = gateways;
     }
