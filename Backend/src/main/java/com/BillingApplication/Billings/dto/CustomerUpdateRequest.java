@@ -39,7 +39,4 @@ public class CustomerUpdateRequest {
     public void setCountry(String country) {
         this.country = country;
     }
-    
-
-
 }
