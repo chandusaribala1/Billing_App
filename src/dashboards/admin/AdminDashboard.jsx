@@ -1,6 +1,7 @@
 import React, { useState,useEffect } from "react";
 import { User, Box, FileText, CreditCard, BarChart2, LogOut, UserCircle2, Menu, Search } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { jwtDecode } from "jwt-decode";
 import CustomersPage from "./CustomersPage.jsx";
 import InvoicePage from "./InvoicePage.jsx";
 import PaymentPage from "./PaymentPage.jsx";
@@ -14,7 +15,7 @@ const AdminDashboard = () => {
   const [activePage, setActivePage] = useState("dashboard");
   const [products, setProducts] = useState([]);
   const [invoices, setInvoices] = useState([]);
-
+  
 
   // Dummy KPI data
   const [kpis, setKpis] = useState({
@@ -63,15 +64,48 @@ const fetchInvoiceCount = async () => {
     const res = await axios.get("http://localhost:8080/invoices", {
       headers: { Authorization: `Bearer ${token}` },
     });
+    // console.log("Invoices API raw response:", res);
+    console.log("Invoices API response:", res.data);
 
-    setKpis((prev) => ({ ...prev, invoices: res.data.length })); // ✅ store invoice count
-    setInvoices(res.data); // ✅ save invoices for "Recent Invoices" table
+    // Ensure we have an array
+    let invoicesArray = [];
+    if (Array.isArray(res.data)) {
+      invoicesArray = res.data.map(inv => ({
+        id: inv.id,
+        
+        dueDate: inv.dueDate,
+        status: inv.status,
+        totalAmount: inv.amount,
+        customerId: inv.customerId,
+        customerName: inv.customerName || `Customer ${inv.customerId}`, // fallback if no name
+      }));
+    }
+
+    setInvoices(invoicesArray);
+    setKpis(prev => ({ ...prev, invoices: invoicesArray.length }));
   } catch (err) {
     console.error("Error fetching invoice count:", err);
+    setInvoices([]); // fallback to empty array
+    setKpis(prev => ({ ...prev, invoices: 0 }));
   }
 };
 
-  
+
+
+let adminName = "Profile";
+const storedToken = localStorage.getItem("token");
+
+if (storedToken) {
+  try {
+    const token = storedToken.replace("Bearer ", ""); // ✅ clean token
+    const decoded = jwtDecode(token);
+
+    // By default, Spring Security puts username in "sub"
+    adminName = decoded.sub || decoded.username || "Profile";
+  } catch (err) {
+    console.error("Invalid token:", err);
+  }
+}
 
   // Sales data for chart
   const salesData = [
@@ -103,19 +137,13 @@ const fetchInvoiceCount = async () => {
           </div>
         </div>
         <div className="kpi-card">
-          <CreditCard size={40} />
-          <div className="kpi-content">
-            <span>Revenue</span>
-            <span className="number">₹{kpis.revenue.toLocaleString()}</span>
-          </div>
-        </div>
-        <div className="kpi-card">
           <BarChart2 size={40} />
           <div className="kpi-content">
             <span>Total Products</span>
             <span className="number">{kpis.products?.toLocaleString() || 0}</span>
           </div>
         </div>
+        
       </div>
 
       <h2 style={{ marginLeft: 25 }}>Recent Users</h2>
@@ -124,7 +152,7 @@ const fetchInvoiceCount = async () => {
           <tr>
             <th>Name</th>
             <th>Email</th>
-            <th>Status</th>
+            <th>Address</th>
           </tr>
         </thead>
         <tbody>
@@ -132,9 +160,8 @@ const fetchInvoiceCount = async () => {
             <tr key={user.id}>
               <td>{user.name}</td>
               <td>{user.email}</td>
-              <td>
-                <span className={`status ${user.status}`}>{user.status}</span>
-              </td>
+              <td>{user.address}</td>
+
             </tr>
           ))}
         </tbody>
@@ -152,15 +179,13 @@ const fetchInvoiceCount = async () => {
     </tr>
   </thead>
   <tbody>
-    {invoices.map((invoice) => (
+    {Array.isArray(invoices) && invoices.map((invoice) => (
       <tr key={invoice.id}>
         <td>{invoice.id}</td>
-        <td>{invoice.customer?.name || "N/A"}</td>
+        <td>{invoice.customerName}</td>
         <td>{invoice.totalAmount?.toLocaleString() || 0}</td>
-        <td>{invoice.createdDate}</td>
-        <td>
-          <span className={`status ${invoice.status}`}>{invoice.status}</span>
-        </td>
+        <td>{invoice.dueDate}</td>
+        <td>{invoice.status}</td>
       </tr>
     ))}
   </tbody>
@@ -482,6 +507,10 @@ const fetchInvoiceCount = async () => {
           .kpi-card {
             flex: 1 1 100%;
           }
+            .profile UserCircle2 {
+            top:12px
+            bottom:12px
+            }
           .sidebar {
             position: fixed;
             z-index: 1000;
@@ -499,6 +528,7 @@ const fetchInvoiceCount = async () => {
           }
 
         }
+
       `}</style>
 
       <div className="dashboard-wrapper">
@@ -556,6 +586,13 @@ const fetchInvoiceCount = async () => {
               <BarChart2 size={20} />
               <span>Reports</span>
             </div>
+            <div
+            className={`sidebar-menu-item`}>
+            <UserCircle2 size={18} />
+  <span>{adminName}</span>
+</div>
+
+
           </div>
         </nav>
 
@@ -566,10 +603,11 @@ const fetchInvoiceCount = async () => {
               Admin Dashboard
             </div>
             <div className="navbar-right">
-              <button>
-                <UserCircle2 size={18} />
-                Profile
+              <button onClick={() => setActivePage("dashboard")}>
+                <BarChart2 size={18} />
+                Home
               </button>
+
               <button
                 onClick={() => {
                 localStorage.removeItem("token");

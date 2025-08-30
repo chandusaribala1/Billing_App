@@ -18,9 +18,14 @@ const InvoicePage = () => {
     try {
       const res = await api.get("/invoices");
       console.log("Fetched invoices:", res.data);
-      setInvoices(res.data);
+      // setInvoices(res.data);
+      const invoiceArray = Array.isArray(res.data)
+          ? res.data
+          : res.data.data || [];
+        setInvoices(invoiceArray);
     } catch (err) {
       console.error("Error fetching invoices:", err);
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
@@ -28,90 +33,70 @@ const InvoicePage = () => {
   fetchInvoices();
 }, []);
 
-  // const filteredInvoices = invoices.filter(
-  //   (inv) =>
-  //     inv.customer.toLowerCase().includes(search.toLowerCase()) ||
-  //     inv.id.toLowerCase().includes(search.toLowerCase())
-  // );
+  const filteredInvoices = (invoices || []).filter(
+    (inv) =>
+      (inv.customerName || `Customer ${inv.customerId}`)
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      inv.id.toString().includes(search)
+  );
 
   const handleChange = (e) => {
     setNewInvoice({ ...newInvoice, [e.target.name]: e.target.value });
   };
 const handleSaveInvoice = async () => {
   try {
-    if (editingId) {
-      // update existing invoice
-      const res = await api.put(`/invoices/${editingId}`, {
-        customerId: newInvoice.customerId,
+    const payload = {
+        customerId: Number(newInvoice.customerId),
         dueDate: newInvoice.due,
-        status: newInvoice.status,
-        items: [
-          {
-            productId: 1, // 👈 adjust if your backend expects real products
-            quantity: 1,
-            unitPrice: newInvoice.amount,
-          },
-        ],
-      });
-      setInvoices(invoices.map(inv => inv.id === editingId ? res.data : inv));
-    } else {
-      // create new invoice
-      const res = await api.post("/invoices", {
-        customerId: newInvoice.customerId,
-        dueDate: newInvoice.due,
-        status: newInvoice.status,
+        status: newInvoice.status.toUpperCase(),
         items: [
           {
             productId: 1,
             quantity: 1,
-            unitPrice: newInvoice.amount,
+            unitPrice: Number(newInvoice.amount),
           },
         ],
-      });
-      setInvoices([...invoices, res.data]);
+      };
+    if (editingId) {
+        const res = await api.put(`/invoices/${editingId}`, payload);
+        setInvoices(invoices.map((inv) => (inv.id === editingId ? res.data : inv)));
+      } else {
+        const res = await api.post("/invoices", payload);
+        setInvoices([...invoices, res.data]);
+      }
+
+      setShowModal(false);
+      setEditingId(null);
+      setNewInvoice({ customerId: "", due: "", amount: "", status: "UNPAID" });
+    } catch (err) {
+      console.error("Error saving invoice:", err.response?.data || err.message);
     }
-
-    setShowModal(false);
-    setEditingId(null);
-    setNewInvoice({ customerId: "", due: "", amount: "", status: "Pending" });
-  } catch (err) {
-    console.error("Error saving invoice:", err.response?.data || err.message);
-  }
-};
+  };
 
 
-const handleEdit = async (id) => {
-  try {
-    const res = await api.put(`/invoices/${id}`, {
-      customerId: newInvoice.customerId,
-      dueDate: newInvoice.due,
-      status: newInvoice.status,
-      items: [
-        {
-          productId: 1,
-          quantity: 1,
-          unitPrice: newInvoice.amount,
-        },
-      ],
+const handleEdit = (inv) => {
+    setNewInvoice({
+      customerId: inv.customerId,
+      due: inv.dueDate?.split("T")[0] || "",
+      amount: inv.amount,
+      status: inv.status,
     });
-
-    setInvoices(invoices.map((inv) => (inv.id === id ? res.data : inv)));
-    setShowModal(false);
-  } catch (err) {
-    console.error("Error updating invoice:", err.response?.data || err.message);
-  }
-};
+    setEditingId(inv.id);
+    setShowModal(true);
+  };
 
   const handleDelete = async (id) => {
-  if (window.confirm("Are you sure you want to delete this invoice?")) {
-    try {
-      await api.delete(`/invoices/${id}`);
-      setInvoices(invoices.filter((inv) => inv.id !== id));
-    } catch (err) {
-      console.error("Error deleting invoice:", err);
+    if (window.confirm("Are you sure you want to delete this invoice?")) {
+      try {
+        await api.delete(`/invoices/${id}`);
+        setInvoices(invoices.filter((inv) => inv.id !== id));
+      } catch (err) {
+        console.error("Error deleting invoice:", err);
+      }
     }
-  }
-};
+  };
+  
   return (
     <div className="invoice-page">
       <h2>Invoices</h2>
@@ -131,7 +116,6 @@ const handleEdit = async (id) => {
           <tr>
             <th>Invoice ID</th>
             <th>Customer</th>
-            <th>Created Date</th>
             <th>Due Date</th>
             <th>Amount</th>
             <th>Status</th>
@@ -140,75 +124,54 @@ const handleEdit = async (id) => {
         </thead>
 
         <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan="7" style={{ textAlign: "center" }}>
-                Loading...
-              </td>
-            </tr>
-          ) : invoices.length > 0 ? (
-            invoices
-              .filter(
-                (inv) =>
-                  inv.customer?.name
-                    ?.toLowerCase()
-                    .includes(search.toLowerCase()) ||
-                  inv.id.toString().includes(search)
-              )
-              .map((inv) => (
-                <tr key={inv.id}>
-                  <td>{`INV${inv.id.toString().padStart(3, "0")}`}</td>
-                  <td>{inv.customer?.name || "N/A"}</td>
-                  <td>{inv.createdDate}</td>
-                  <td>{inv.dueDate}</td>
-                  <td>{Number(inv.totalAmount).toFixed(2)}</td>
-                  <td>
-                    <span className={`status ${inv.status?.toLowerCase()}`}>
-                      {inv.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      className="icon-btn view-btn"
-                      data-tooltip="View Invoice"
-                    >
-                      <FaEye />
-                    </button>
-                    <button
-  className="icon-btn edit-btn"
-  data-tooltip="Edit Invoice"
-  onClick={() => {
-    setNewInvoice({
-      customerId: inv.customer?.id || "",
-      due: inv.dueDate?.split("T")[0] || "",
-      amount: inv.totalAmount,
-      status: inv.status,
-    });
-    setShowModal(true);
-    setEditingId(inv.id); // 👈 store which invoice we are editing
-  }}
->
-  <FaEdit />
-</button>
+  {loading ? (
+    <tr>
+      <td colSpan="7" style={{ textAlign: "center" }}>Loading...</td>
+    </tr>
+  ) : invoices.length > 0 ? (
+    invoices
+      .filter(
+        (inv) =>
+          inv.customer.name.toLowerCase().includes(search.toLowerCase()) ||
+          inv.id.toString().includes(search)
+      )
+      .map((inv) => {
+        const totalAmount = inv.items.reduce(
+          (sum, item) => sum + (item.unitPrice || 0) * (item.quantity || 0),
+          0
+        );
+        return (
+          <tr key={inv.id}>
+            <td>{`INV${inv.id.toString().padStart(3, "0")}`}</td>
+            <td>{inv.customer.name}</td>
+            <td>{inv.dueDate.split("T")[0]}</td>
+            <td>{totalAmount.toFixed(2)}</td>
+            <td>{inv.status}</td>
+            <td>
+              <button className="icon-btn view-btn"><FaEye /></button>
+              <button
+                className="icon-btn edit-btn"
+                onClick={() => handleEdit(inv)}
+              >
+                <FaEdit />
+              </button>
+              <button
+                className="icon-btn delete-btn"
+                onClick={() => handleDelete(inv.id)}
+              >
+                <FaTrash />
+              </button>
+            </td>
+          </tr>
+        );
+      })
+  ) : (
+    <tr>
+      <td colSpan="7" style={{ textAlign: "center" }}>No invoices found.</td>
+    </tr>
+  )}
+</tbody>
 
-                    <button
-                      className="icon-btn delete-btn"
-                      data-tooltip="Delete Invoice"
-                      onClick={() => handleDelete(inv.id)}
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))
-          ) : (
-            <tr>
-              <td colSpan="7" style={{ textAlign: "center" }}>
-                No invoices found.
-              </td>
-            </tr>
-          )}
-        </tbody>
       </table>
 
 

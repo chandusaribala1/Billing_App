@@ -104,34 +104,29 @@ const ReportsPage = () => {
   const [message, setMessage] = useState(null);
   const [reportData, setReportData] = useState(null);
   const [reportType, setReportType] = useState(null);
+  
   const handleGenerateReport = async (reportType) => {
-  setMessage(`Generating ${reportType} report...`);
-  setReportData(null);
+    setMessage(`Generating ${reportType} report...`);
+    setReportData(null);
 
-  try {
-    const token = localStorage.getItem("token");
-    let res;
+    try {
+      const token = localStorage.getItem("token");
+      let res;
 
-    if (reportType === "Sales Summary") {
-      const from = "2025-08-01";
-      const to = "2025-08-31";
-      res = await axios.get(
-        `http://localhost:8080/reports/invoices?from=${from}&to=${to}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } else if (reportType === "Customer") {
-      res = await axios.get(`http://localhost:8080/reports/customer/1`, {
+      if (reportType === "Customer") {
+      res = await axios.get(`http:/localhost:8080/customer/1`, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } else if (reportType === "Invoices") {
       const month = "2025-08";
       res = await axios.get(
-        `http://localhost:8080/reports/invoices/monthly?month=${month}`,
+        `http:/localhost:8080/invoices/monthly?month=${month}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
     } else if (reportType === "Products") {
-      res = { data: [{ name: "Product A", value: 120 }, { name: "Product B", value: 80 }] }; 
-      // mocked data
+      res = await axios.get("http:/localhost:8080/products", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     }
 
     // Normalize data for recharts
@@ -143,6 +138,7 @@ const ReportsPage = () => {
         : [res.data];
 
     setReportData(formatted);
+    setReportType(reportType);
     setMessage(`'${reportType}' report generated successfully!`);
   } catch (err) {
     console.error(err);
@@ -168,14 +164,14 @@ const ReportsPage = () => {
         
         <div className="grid">
           {/* Sales Summary */}
-          <div className="card">
+          {/* <div className="card">
             <DollarSign size={48} color="#16a34a" style={{ marginBottom: "16px" }} />
             <h3>Sales Summary</h3>
             <p>Quick overview of total revenue and transactions.</p>
             <button className="btn-green" onClick={() => handleGenerateReport('Sales Summary')}>
               Generate Report
             </button>
-          </div>
+          </div> */}
 
           {/* Customer Report */}
           <div className="card">

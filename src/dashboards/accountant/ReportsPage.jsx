@@ -7,54 +7,53 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
 } from "recharts";
 
+// 🎯 Moved the axios instance creation to a proper scope
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
 });
+
+// 🎯 Use an interceptor to add the token to every request
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("jwtToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 const ReportsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [invoices, setInvoices] = useState([]);
-  const [expenses, setExpenses] = useState([]);
   const [financialSummary, setFinancialSummary] = useState({
-    profit: 0,
-    expenses: 0,
+    totalSales: 0,
     cashFlow: 0,
   });
 
-  // 🎯 Fetch invoices & expenses from backend
+  // 🎯 Fetch invoices for the current month from backend
   const fetchReports = async () => {
     try {
-      const [invoiceRes, expenseRes] = await Promise.all([
-        api.get("/invoices"),
-        api.get("/expenses"), // <-- make sure you have this endpoint
-      ]);
+      const today = new Date();
+      // Month is 0-indexed in JS, but backend expects 1-indexed month, so add 1
+      const month = today.getFullYear() + "-" + (today.getMonth() + 1);
 
+      // The backend returns a list of invoices, not a map
+      const invoiceRes = await api.get(`/invoices/reports/monthly?month=${month}`);
       const invoicesData = invoiceRes.data;
-      const expensesData = expenseRes.data || [];
+
+      // Calculate total sales and cash flow from the fetched data
+      const totalSales = invoicesData.reduce((sum, inv) => sum + inv.totalAmount, 0);
 
       setInvoices(invoicesData);
-      setExpenses(expensesData);
-
-      // 💰 Calculate summary
-      const totalSales = invoicesData.reduce(
-        (sum, inv) => sum + (inv.totalAmount || 0),
-        0
-      );
-      const totalExpenses = expensesData.reduce(
-        (sum, exp) => sum + (exp.amount || 0),
-        0
-      );
-
       setFinancialSummary({
-        profit: totalSales - totalExpenses,
-        expenses: totalExpenses,
-        cashFlow: totalSales - totalExpenses, // simple cashflow
+        totalSales: totalSales,
+        cashFlow: totalSales, // Assuming cash flow is equal to total sales for this report
       });
     } catch (err) {
       console.error("Error fetching reports:", err);
@@ -66,6 +65,8 @@ const ReportsPage = () => {
   }, []);
 
   // 📊 Monthly Sales (grouped by month)
+  // This logic is now redundant since the backend already sends monthly data
+  // But we'll keep it for the BarChart to show grouped data
   const monthlySales = invoices.reduce((acc, inv) => {
     const month = new Date(inv.dueDate).toLocaleString("default", {
       month: "short",
@@ -79,14 +80,6 @@ const ReportsPage = () => {
     return acc;
   }, []);
 
-  // 🧾 Expense breakdown for PieChart
-  const expenseData = expenses.map((exp) => ({
-    name: exp.category || "Other",
-    value: exp.amount,
-  }));
-
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
-
   // 🔎 Filter sales by customer name
   const filteredSales = invoices.filter((inv) =>
     inv.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -99,22 +92,18 @@ const ReportsPage = () => {
       {/* Summary Cards */}
       <div className="summary-cards">
         <div className="card profit">
-          <h3>Profit</h3>
-          <p>₹{financialSummary.profit.toLocaleString()}</p>
-        </div>
-        <div className="card expenses">
-          <h3>Expenses</h3>
-          <p>₹{financialSummary.expenses.toLocaleString()}</p>
+          <h3>Total Sales (This Month)</h3>
+          <p>₹{financialSummary.totalSales.toLocaleString()}</p>
         </div>
         <div className="card cashflow">
-          <h3>Cash Flow</h3>
+          <h3>Cash Flow (This Month)</h3>
           <p>₹{financialSummary.cashFlow.toLocaleString()}</p>
         </div>
       </div>
 
       {/* Sales Report Table */}
       <div className="sales-report">
-        <h2>Sales Report</h2>
+        <h2>Sales Report (This Month)</h2>
         <input
           type="text"
           placeholder="Search by client name"
@@ -164,32 +153,6 @@ const ReportsPage = () => {
               <Tooltip />
               <Bar dataKey="sales" fill="#0088FE" />
             </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="chart-box">
-          <h3>Expense Breakdown</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={expenseData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {expenseData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend verticalAlign="bottom" height={36} />
-            </PieChart>
           </ResponsiveContainer>
         </div>
       </div>

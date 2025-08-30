@@ -18,9 +18,14 @@ const InvoicePage = () => {
     try {
       const res = await api.get("/invoices");
       console.log("Fetched invoices:", res.data);
-      setInvoices(res.data);
+      // setInvoices(res.data);
+      const invoiceArray = Array.isArray(res.data)
+          ? res.data
+          : res.data.data || [];
+        setInvoices(invoiceArray);
     } catch (err) {
       console.error("Error fetching invoices:", err);
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
@@ -28,11 +33,13 @@ const InvoicePage = () => {
   fetchInvoices();
 }, []);
 
-  // const filteredInvoices = invoices.filter(
-  //   (inv) =>
-  //     inv.customer.toLowerCase().includes(search.toLowerCase()) ||
-  //     inv.id.toLowerCase().includes(search.toLowerCase())
-  // );
+  const filteredInvoices = (invoices || []).filter(
+    (inv) =>
+      (inv.customerName || `Customer ${inv.customerId}`)
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      inv.id.toString().includes(search)
+  );
 
   const handleChange = (e) => {
     setNewInvoice({ ...newInvoice, [e.target.name]: e.target.value });
@@ -40,38 +47,56 @@ const InvoicePage = () => {
 const handleSaveInvoice = async () => {
   try {
     const payload = {
-      customerId: newInvoice.customerId,
-      dueDate: newInvoice.due,
-      status: newInvoice.status,
-      amount: newInvoice.amount,  // ✅ include amount
-      description: "Created via frontend", // ✅ optional, add field if needed
-      items: [
-        {
-          productId: 1, // ⚠️ later replace with dynamic product picker
-          quantity: 1,
-          unitPrice: newInvoice.amount,
-        },
-      ],
-    };
-
-    let res;
+        customerId: Number(newInvoice.customerId),
+        dueDate: newInvoice.due,
+        status: newInvoice.status.toUpperCase(),
+        items: [
+          {
+            productId: 1,
+            quantity: 1,
+            unitPrice: Number(newInvoice.amount),
+          },
+        ],
+      };
     if (editingId) {
-      res = await api.put(`/invoices/${editingId}`, payload);
-      setInvoices(invoices.map((inv) => (inv.id === editingId ? res.data : inv)));
-    } else {
-      res = await api.post("/invoices", payload);
-      setInvoices([...invoices, res.data]);
+        const res = await api.put(`/invoices/${editingId}`, payload);
+        setInvoices(invoices.map((inv) => (inv.id === editingId ? res.data : inv)));
+      } else {
+        const res = await api.post("/invoices", payload);
+        setInvoices([...invoices, res.data]);
+      }
+
+      setShowModal(false);
+      setEditingId(null);
+      setNewInvoice({ customerId: "", due: "", amount: "", status: "UNPAID" });
+    } catch (err) {
+      console.error("Error saving invoice:", err.response?.data || err.message);
     }
+  };
 
-    // reset form
-    setShowModal(false);
-    setEditingId(null);
-    setNewInvoice({ customerId: "", due: "", amount: "", status: "UNPAID" });
-  } catch (err) {
-    console.error("Error saving invoice:", err.response?.data || err.message);
-  }
-};
 
+const handleEdit = (inv) => {
+    setNewInvoice({
+      customerId: inv.customerId,
+      due: inv.dueDate?.split("T")[0] || "",
+      amount: inv.amount,
+      status: inv.status,
+    });
+    setEditingId(inv.id);
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this invoice?")) {
+      try {
+        await api.delete(`/invoices/${id}`);
+        setInvoices(invoices.filter((inv) => inv.id !== id));
+      } catch (err) {
+        console.error("Error deleting invoice:", err);
+      }
+    }
+  };
+  
   return (
     <div className="invoice-page">
       <h2>Invoices</h2>
@@ -91,7 +116,6 @@ const handleSaveInvoice = async () => {
           <tr>
             <th>Invoice ID</th>
             <th>Customer</th>
-            <th>Created Date</th>
             <th>Due Date</th>
             <th>Amount</th>
             <th>Status</th>
@@ -100,77 +124,54 @@ const handleSaveInvoice = async () => {
         </thead>
 
         <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan="7" style={{ textAlign: "center" }}>
-                Loading...
-              </td>
-            </tr>
-          ) : invoices.length > 0 ? (
-            invoices
-              .filter(
-                (inv) =>
-                  inv.customer?.name
-                    ?.toLowerCase()
-                    .includes(search.toLowerCase()) ||
-                  inv.id.toString().includes(search)
-              )
-              .map((inv) => (
-                <tr key={inv.id}>
-                  <td>{`INV${inv.id.toString().padStart(3, "0")}`}</td>
-                  <td>{inv.customer?.name || "N/A"}</td>
-                  <td>{inv.createdDate}</td>
-                  <td>{inv.dueDate}</td>
-                  <td>{Number(inv.totalAmount).toFixed(2)}</td>
-                  <td>
-                  <span
-                    className={`status ${
-                    inv.status === "PAID"? "paid"
-                    : inv.status === "UNPAID"? "unpaid"
-                    : inv.status === "PARTIALLY_PAID"? "partial"
-                    : ""
-                    }`}>
-                    {inv.status}
-                  </span>
-                  </td>
+  {loading ? (
+    <tr>
+      <td colSpan="7" style={{ textAlign: "center" }}>Loading...</td>
+    </tr>
+  ) : invoices.length > 0 ? (
+    invoices
+      .filter(
+        (inv) =>
+          inv.customer.name.toLowerCase().includes(search.toLowerCase()) ||
+          inv.id.toString().includes(search)
+      )
+      .map((inv) => {
+        const totalAmount = inv.items.reduce(
+          (sum, item) => sum + (item.unitPrice || 0) * (item.quantity || 0),
+          0
+        );
+        return (
+          <tr key={inv.id}>
+            <td>{`INV${inv.id.toString().padStart(3, "0")}`}</td>
+            <td>{inv.customer.name}</td>
+            <td>{inv.dueDate.split("T")[0]}</td>
+            <td>{totalAmount.toFixed(2)}</td>
+            <td>{inv.status}</td>
+            <td>
+              <button className="icon-btn view-btn"><FaEye /></button>
+              <button
+                className="icon-btn edit-btn"
+                onClick={() => handleEdit(inv)}
+              >
+                <FaEdit />
+              </button>
+              <button
+                className="icon-btn delete-btn"
+                onClick={() => handleDelete(inv.id)}
+              >
+                <FaTrash />
+              </button>
+            </td>
+          </tr>
+        );
+      })
+  ) : (
+    <tr>
+      <td colSpan="7" style={{ textAlign: "center" }}>No invoices found.</td>
+    </tr>
+  )}
+</tbody>
 
-                  <td>
-                    
-                    <button
-  className="icon-btn edit-btn"
-  data-tooltip="Edit Invoice"
-  onClick={() => {
-    setNewInvoice({
-      customerId: inv.customer?.id || "",
-      due: inv.dueDate?.split("T")[0] || "",
-      amount: inv.totalAmount,
-      status: inv.status,
-    });
-    setShowModal(true);
-    setEditingId(inv.id); // 👈 store which invoice we are editing
-  }}
->
-  <FaEdit />
-</button>
-
-                    <button
-                      className="icon-btn delete-btn"
-                      data-tooltip="Delete Invoice"
-                      onClick={() => handleDelete(inv.id)}
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))
-          ) : (
-            <tr>
-              <td colSpan="7" style={{ textAlign: "center" }}>
-                No invoices found.
-              </td>
-            </tr>
-          )}
-        </tbody>
       </table>
 
 
@@ -265,24 +266,23 @@ const handleSaveInvoice = async () => {
         background: #f4f4f4;
         }
         .status {
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 0.7em;
-  font-weight: normal;
-}
-
-.status.paid {
-  color: black;
-}
-
-.status.unpaid {
-  color: black;
-}
-
-.status.partial {
-  color: black;
-}
-
+        padding: 5px 10px;
+        border-radius: 4px;
+        color: white;
+        font-size: 0.9em;
+        }
+        .status.paid {
+        background: none;
+        color:black; 
+        }
+        .status.pending { 
+        background: none;
+        color:black; 
+        }
+        .status.overdue { 
+        background: none;
+        color:black;  
+        }
         .icon-btn { 
         position: relative; 
         border: none; 

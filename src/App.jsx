@@ -6,10 +6,11 @@ import Register from "./Component/Register.jsx";
 import AdminDashboard from "./dashboards/admin/AdminDashboard.jsx";
 import AccountantDashboard from "./dashboards/accountant/AccountantDashboard.jsx";
 import CustomerDashboard from "./dashboards/customer/CustomerDashboard.jsx";
+import { InvoiceProvider } from "./context/InvoiceContext.jsx";
 
 function App() {
   return (
-    
+  
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -18,7 +19,7 @@ function App() {
         <Route path="/accountant/*" element={<AccountantDashboard />} />
         <Route path="/customer/*" element={<CustomerDashboard />} />
       </Routes>
-  
+    
   );
 }
 

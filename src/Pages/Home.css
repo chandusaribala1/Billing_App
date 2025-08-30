@@ -1,4 +1,7 @@
 
+body{
+  width: 100px;
+}
 .home-container {
   flex: 1; /* Fill space between navbar & footer */
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -10,6 +13,7 @@
 /* Hero section full width */
 .hero-section {
   width: 100vw;
+  min-height: 100dvh;
   text-align: center;
   padding: 60px 20px;
   background: linear-gradient(125deg, #e374f4, #aa1bed, #844582, #a6dff4);

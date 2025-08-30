@@ -4,11 +4,14 @@ import { Menu } from "lucide-react";
 import InvoicesPage from "./InvoicesPage.jsx";
 import PaymentsPage from "./PaymentsPage.jsx";
 import ReportsPage from "./ReportsPage.jsx";
-
+import CustomersPage from "./CustomerPage.jsx";
+import ProductsPage from "./ProductPage.jsx";
 const AccountantDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const links = [
+    { name: "Customers", path: "customers" },
+    { name: "Products", path: "products" },
     { name: "Invoices", path: "invoices" },
     { name: "Payments", path: "payments" },
     { name: "Reports", path: "reports" },
@@ -50,7 +53,10 @@ const AccountantDashboard = () => {
         <div className="page-content">
           <Routes>
             
-            <Route path="/" element={<InvoicesPage />} />
+            <Route path="/" element={<CustomersPage />} />
+            <Route path="customers" element={<CustomersPage />} />
+            <Route path="products" element={<ProductsPage />} />
+            <Route path="invoices" element={<InvoicesPage />} />
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="reports" element={<ReportsPage />} />
           </Routes>

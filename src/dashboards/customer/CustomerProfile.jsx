@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+// Removed lucide-react icons as they are typically handled by the Dashboard's sidebar/navbar
+// Removed useNavigate as this component is now a child route, navigation logic is in Dashboard
 
 const CustomerProfile = () => {
   const [profile, setProfile] = useState({
