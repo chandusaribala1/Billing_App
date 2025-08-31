@@ -1,18 +1,39 @@
 import React, { useState } from "react";
-import { Routes, Route, Link } from "react-router-dom";
-import { Menu, UserCircle2, LogOut } from "lucide-react"; // Added UserCircle2, LogOut for navbar
+import { Menu, UserCircle2, LogOut, FileText, DollarSign } from "lucide-react";
 import MyInvoicesPage from "./MyInvoicesPage.jsx";
 import MyPaymentsPage from "./MyPaymentsPage.jsx";
 import CustomerProfile from "./CustomerProfile.jsx";
 
 const CustomerDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Use state to manage the active page, just like in AdminDashboard
+  const [activePage, setActivePage] = useState("profile"); // Set a default page
+
+  const handleLogout = () => {
+    // Add your logout logic here (e.g., clearing tokens)
+    console.log("Logging out...");
+    // navigate("/login"); // No need for navigate if we redirect
+    window.location.href = "/login";
+  };
 
   const links = [
-    { name: "Invoices", path: "/" }, // Invoices remains the default route in sidebar
-    { name: "Payments", path: "payments" },
-    // Removed "Profile" from here, it's moving to the navbar
+    { name: "Invoices", id: "invoices", icon: FileText },
+    { name: "Payments", id: "payments", icon: DollarSign },
   ];
+
+  // Render the component for the active page
+  const renderPage = () => {
+    switch (activePage) {
+      case "invoices":
+        return <MyInvoicesPage />;
+      case "payments":
+        return <MyPaymentsPage />;
+      case "profile":
+        return <CustomerProfile />;
+      default:
+        return <CustomerProfile />; // Fallback to profile page
+    }
+  };
 
   return (
     <div className="dashboard-wrapper">
@@ -26,18 +47,29 @@ const CustomerDashboard = () => {
           >
             <Menu size={24} />
           </button>
-          {sidebarOpen && <div>AccuBillify</div>} {/* Show name only when sidebar is open */}
+          {sidebarOpen && <div>AccuBillify</div>}
         </div>
         <div className="sidebar-menu">
           {links.map((link, index) => (
-            <Link
+            // Use a div with an onClick handler to change the activePage state
+            <div
               key={index}
-              to={link.path}
-              className="sidebar-menu-item"
+              className={`sidebar-menu-item ${activePage === link.id ? "active" : ""}`}
+              onClick={() => setActivePage(link.id)}
             >
+              <link.icon size={20} />
               <span>{link.name}</span>
-            </Link>
+            </div>
           ))}
+        </div>
+        <div className="sidebar-footer">
+          <button
+            onClick={handleLogout}
+            className="sidebar-menu-item"
+          >
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
         </div>
       </nav>
 
@@ -46,51 +78,46 @@ const CustomerDashboard = () => {
         <header className="navbar">
           <div className="navbar-left">Customer Dashboard</div>
           <div className="navbar-right">
-            {/* Removed "Invoices" link from navbar */}
-            {/* Added "Profile" to navbar */}
-            <Link to="profile" className="navbar-profile-link">
-                <UserCircle2 size={18} />
-                Profile
-            </Link>
-            <Link to="/login" className="navbar-logout-link"> {/* Added class for consistency */}
-                <LogOut size={18} />
-                Logout
-            </Link>
+            {/* Use div for profile link as well to handle state change */}
+            <div
+              className={`navbar-profile-link ${activePage === "profile" ? "active" : ""}`}
+              onClick={() => setActivePage("profile")}
+            >
+              <UserCircle2 size={18} />
+              Profile
+            </div>
+            <button onClick={handleLogout} className="navbar-logout-link">
+              <LogOut size={18} />
+              Logout
+            </button>
           </div>
         </header>
-
         <div className="page-content">
-          <Routes>
-            <Route path="/" element={<MyInvoicesPage />} />
-            <Route path="payments" element={<MyPaymentsPage />} />
-            <Route path="profile" element={<CustomerProfile />} />
-          </Routes>
+          {/* Render the selected page component */}
+          {renderPage()}
         </div>
       </main>
-
-      {/* Styles */}
       <style>{`
+        /* Your CSS styles here */
         body, html, #root {
           margin: 0;
           padding: 0;
           height: 100%;
-          width: 100%; /* Ensure html/body take full width */
-          overflow-x: hidden; /* Prevent horizontal scroll from external elements */
+          width: 100%; 
         }
         .dashboard-wrapper {
           width: 100vw;
           display: flex;
           height: 100vh;
           font-family: Arial, sans-serif;
-          overflow: hidden; /* Prevent scroll on wrapper, let main-content handle it */
+          overflow: hidden; 
         }
 
-        /* Sidebar styling like AdminDashboard */
         .sidebar {
           background: linear-gradient(125deg, #e374f4, #aa1bed, #844582, #a6dff4);
           color: white;
           width: 240px;
-          flex-shrink: 0; /* Prevents sidebar from shrinking */
+          flex-shrink: 0;
           display: flex;
           flex-direction: column;
           transition: width 0.3s ease;
@@ -104,14 +131,14 @@ const CustomerDashboard = () => {
           border-bottom: 1px solid rgba(255,255,255,0.2);
           display: flex;
           align-items: center;
-          justify-content: ${sidebarOpen ? 'space-between' : 'center'}; /* Adjust alignment */
+          justify-content: ${sidebarOpen ? 'space-between' : 'center'};
         }
-        .sidebar-header div { /* For AccuBillify text */
-            margin-left: ${sidebarOpen ? '10px' : '0'};
-            font-weight: bold;
-            font-size: 1.2rem;
-            opacity: ${sidebarOpen ? '1' : '0'}; /* Fade text when collapsed */
-            transition: opacity 0.3s ease;
+        .sidebar-header div {
+          margin-left: ${sidebarOpen ? '10px' : '0'};
+          font-weight: bold;
+          font-size: 1.2rem;
+          opacity: ${sidebarOpen ? '1' : '0'};
+          transition: opacity 0.3s ease;
         }
         .sidebar-toggle-btn {
           background: none;
@@ -135,26 +162,23 @@ const CustomerDashboard = () => {
           text-overflow: ellipsis;
         }
         .sidebar-menu-item:hover,
-        .sidebar-menu-item.active { /* Added active state for sidebar items */
+        .sidebar-menu-item.active {
           background: rgba(0,0,0,0.2);
         }
         .sidebar.collapsed .sidebar-menu-item span {
           display: none;
         }
 
-        /* Main Content */
         .main-content {
-          flex-grow: 1;
+          width:100%;
           background: #f4f6f8;
           overflow-y: auto;
           height: 100vh;
         }
-        /* Removed .main-content.collapsed rule */
 
-        /* Navbar styling like AdminDashboard */
         .navbar {
           background: white;
-          padding: 15px 25px;
+          padding: 15px 20px;
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -162,8 +186,8 @@ const CustomerDashboard = () => {
           position: sticky;
           top: 0;
           z-index: 100;
-          width: 100%; /* Relative to main-content */
-          box-sizing: border-box; /* Include padding in width */
+          width: 100%;
+          box-sizing: border-box;
         }
         .navbar-left {
           font-weight: 700;
@@ -172,33 +196,38 @@ const CustomerDashboard = () => {
           display: flex;
           align-items: center;
           gap: 10px;
-          flex-shrink: 1;   /* Allows this element to shrink if needed */
-          min-width: 0;     /* Ensures content can shrink below its intrinsic size */
-          white-space: nowrap; /* Prevent text from wrapping */
-          overflow: hidden;    /* Hide overflowing text */
-          text-overflow: ellipsis; /* Add ellipsis for hidden text */
+          flex-shrink: 1;
+          min-width: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .navbar-right {
             display: flex;
             align-items: center;
-            gap: 15px; /* Space between navbar links/buttons */
-            flex-shrink: 0; /* Prevents this element from shrinking */
+            gap: 15px;
+            flex-shrink: 0;
         }
-        .navbar-right a {
+        .navbar-right a, .navbar-right div { /* Apply styles to both links and divs */
           color: #555;
           text-decoration: none;
           font-weight: 600;
-          display: flex; /* Allow icons in link */
+          display: flex;
           align-items: center;
           gap: 6px;
-          padding: 6px 10px; /* Add padding for clickable area */
+          padding: 6px 10px;
           border-radius: 6px;
           transition: background-color 0.2s;
+          cursor: pointer;
         }
-        .navbar-right a:hover {
+        .navbar-right a:hover, .navbar-right div:hover {
           background-color: #eee;
         }
-        .navbar-logout-link { /* Specific style for logout link */
+        .navbar-right a.active, .navbar-right div.active {
+          background-color: #eee;
+          color: #000;
+        }
+        .navbar-logout-link {
             color: #ef4444;
         }
         .navbar-logout-link:hover {
@@ -206,13 +235,11 @@ const CustomerDashboard = () => {
             color: #dc2626;
         }
 
-        /* Page Content */
         .page-content {
+          box-sizing: border-box;
           padding: 20px;
-          box-sizing: border-box; /* Crucial for preventing overflow with padding */
         }
 
-        /* Responsive behavior */
         @media (max-width: 900px) {
           .sidebar {
             position: fixed;
@@ -223,29 +250,29 @@ const CustomerDashboard = () => {
             transform: translateX(-100%);
             transition: transform 0.3s ease;
           }
-          .sidebar.collapsed { /* When sidebar is collapsed on mobile, it should hide completely */
+          .sidebar.collapsed {
             transform: translateX(-100%);
             width: 0;
           }
           .sidebar-header {
             justify-content: center;
           }
-          .sidebar-header div { /* Hide AccuBillify text on mobile collapsed */
+          .sidebar-header div {
             opacity: 0;
             width: 0;
             overflow: hidden;
           }
-          .sidebar-toggle-btn { /* Make toggle visible on mobile */
+          .sidebar-toggle-btn {
             margin: 0;
           }
           .main-content {
-            margin-left: 0 !important; /* Always zero on mobile */
+            margin-left: 0 !important;
           }
-          .navbar-right { /* Adjust navbar links on mobile */
+          .navbar-right {
             flex-wrap: wrap;
             justify-content: flex-end;
           }
-          .navbar-right a {
+          .navbar-right a, .navbar-right div {
             margin: 5px 0;
           }
         }

@@ -84,7 +84,7 @@ const CustomerPage = () => {
 
       {/* 🔹 Table */}
       <div className="table-container overflow-x-auto border rounded shadow bg-white">
-        <table className="min-w-full border-collapse">
+        <table className="min-w-full border-separate">
           <thead className="bg-gray-100">
             <tr>
               <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">

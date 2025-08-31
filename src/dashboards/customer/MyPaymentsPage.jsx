@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 // Removed UserCircle2, LogOut as navbar is removed
@@ -498,4 +497,3 @@ const MyPaymentPage = () => {
 };
 
 export default MyPaymentPage;
-
