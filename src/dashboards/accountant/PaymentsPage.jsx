@@ -23,8 +23,6 @@ const PaymentsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [payments, setPayments] = useState([]);
-
-  // Fetch payments from API
   const fetchPayments = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -40,18 +38,10 @@ const PaymentsPage = () => {
   useEffect(() => {
     fetchPayments();
   }, []);
-
-  // Format status for display
   const formatStatus = (status) =>
     status
       ? status.replace("_", " ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
       : "unpaid";
-
-  // Format method for display
-  const formatMethod = (method) =>
-    method ? method.charAt(0).toUpperCase() + method.slice(1).toLowerCase() : "N/A";
-
-  // Filtered payments based on search and status
   const filteredPayments = payments.filter((p) => {
     const matchesStatus =
       statusFilter === "All" || formatStatus(p.status) === formatStatus(statusFilter);
@@ -61,18 +51,6 @@ const PaymentsPage = () => {
       p.invoice?.id?.toString().includes(searchTerm);
     return matchesStatus && matchesSearch;
   });
-
-  // Summary cards
-  const summaryData = {
-    totalPaid: payments
-      .filter((p) => p.status === "PAID")
-      .reduce((sum, p) => sum + Number(p.amount), 0),
-    pending: payments.filter((p) => p.status === "PENDING").length,
-    overdue: payments.filter((p) => p.status === "OVERDUE").length,
-    refunds: payments.filter((p) => p.status === "REFUNDED").length,
-  };
-
-  // Chart data: Payments over time
   const chartData = payments.reduce((acc, p) => {
     if (!p.paymentDate) return acc;
     const month = new Date(p.paymentDate).toLocaleString("default", { month: "short" });
@@ -81,8 +59,6 @@ const PaymentsPage = () => {
     else acc.push({ name: month, value: Number(p.amount) });
     return acc;
   }, []);
-
-  // Pie chart: Payment methods
   const pieData = Object.entries(
     payments.reduce((acc, p) => {
       acc[p.method] = (acc[p.method] || 0) + 1;
@@ -95,24 +71,6 @@ const PaymentsPage = () => {
   return (
     <div className="payments-container">
       <h1>Payments</h1>
-
-      {/* Summary Cards */}
-      <div className="summary-cards">
-        <div className="card">
-          <CreditCard /> <span>Total Paid: ₹{summaryData.totalPaid}</span>
-        </div>
-        <div className="card">
-          <Clock /> <span>Pending: {summaryData.pending}</span>
-        </div>
-        <div className="card">
-          <AlertCircle /> <span>Overdue: {summaryData.overdue}</span>
-        </div>
-        <div className="card">
-          <RotateCcw /> <span>Refunds: {summaryData.refunds}</span>
-        </div>
-      </div>
-
-      {/* Filters */}
       <div className="filters">
         <div className="search-box">
           <Search size={18} />
@@ -134,8 +92,6 @@ const PaymentsPage = () => {
           <option>Refunded</option>
         </select>
       </div>
-
-      {/* Payments Table */}
       <table className="payments-table">
         <thead>
           <tr>
@@ -143,8 +99,6 @@ const PaymentsPage = () => {
             <th>Client</th>
             <th>Amount</th>
             <th>Date</th>
-            <th>Status</th>
-            <th>Method</th>
           </tr>
         </thead>
         <tbody>
@@ -158,14 +112,10 @@ const PaymentsPage = () => {
                   ? new Date(payment.paymentDate).toLocaleDateString()
                   : "N/A"}
               </td>
-              <td>{formatStatus(payment.status)}</td>
-              <td>{formatMethod(payment.method)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      {/* Charts */}
       <div className="charts">
         <div className="chart">
           <h3>Payments Over Time</h3>

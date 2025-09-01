@@ -1,31 +1,16 @@
 import React, { useState } from "react";
-// Removed lucide-react icons as they are typically handled by the Dashboard's sidebar/navbar
-// Removed useNavigate as this component is now a child route, navigation logic is in Dashboard
-
 const CustomerProfile = () => {
   const [profile, setProfile] = useState({
-    name: "John Doe",
-    email: "johndoe@email.com",
-    phone: "+91 9876543210",
-    dob: "1995-06-15",
-    gender: "Male",
-    address: "123, MG Road, Bengaluru",
+    name: "",
+    email: "",
+    phone: "",
+    dob: "",
+    address: "",
     company: "AccuBillify Pvt Ltd",
     role: "Customer",
-    country: "India",
-    username: "johndoe123",
-    billingAddress: "456, Residency Road, Bengaluru",
-    subscription: "Pro",
-    notifications: {
-      email: true,
-      sms: false,
-      push: true,
-    },
-    twoFactorAuth: false,
-    password: "",
-    confirmPassword: "",
+    country: "",
+    username: ""
   });
-
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
     if (name.includes("notifications")) {
@@ -40,30 +25,24 @@ const CustomerProfile = () => {
       setProfile({ ...profile, [name]: value });
     }
   };
-
   const handleSave = () => {
     if (profile.password && profile.password !== profile.confirmPassword) {
-      alert("Passwords do not match!"); // Using alert as per original code, consider custom modal
+      alert("Passwords do not match!");
       return;
     }
-    alert("Profile Updated Successfully!"); // Using alert as per original code, consider custom modal
+    alert("Profile Updated Successfully!"); 
     console.log("Updated Profile:", profile);
   };
 
   const handleCancel = () => {
-    // In a real app, you might fetch original data or reset state,
-    // window.location.reload() refreshes the page which might reset unsaved changes.
-    window.location.reload(); // Using reload as per original code
+    
+    window.location.reload();
   };
 
   return (
     <>
-      {/* The .profile-container div and its styling are removed.
-          The dashboard's .page-content and .main-content will manage the layout. */}
       <div className="profile-card">
         <h2 className="profile-title">Profile Settings</h2>
-
-        {/* Personal Information Section */}
         <h3 className="section-title">Personal Information</h3>
         <div className="profile-form">
           <label>Name</label>
@@ -77,27 +56,13 @@ const CustomerProfile = () => {
 
           <label>Date of Birth</label>
           <input type="date" name="dob" value={profile.dob} onChange={handleChange} />
-
-          <label>Gender</label>
-          <select name="gender" value={profile.gender} onChange={handleChange}>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
-
           <label>Address</label>
           <textarea name="address" value={profile.address} onChange={handleChange} />
         </div>
-
-        {/* Account Settings Section */}
         <h3 className="section-title">Account Settings</h3>
         <div className="profile-form">
           <label>Username</label>
           <input type="text" name="username" value={profile.username} onChange={handleChange} />
-
-          <label>Company</label>
-          <input type="text" name="company" value={profile.company} onChange={handleChange} />
-
           <label>Role</label>
           <input type="text" name="role" value={profile.role} onChange={handleChange} />
 
@@ -109,58 +74,6 @@ const CustomerProfile = () => {
             <option>Canada</option>
             <option>Australia</option>
           </select>
-
-          <label>Billing Address</label>
-          <textarea name="billingAddress" value={profile.billingAddress} onChange={handleChange} />
-
-          <label>Subscription Plan</label>
-          <select name="subscription" value={profile.subscription} onChange={handleChange}>
-            <option>Free</option>
-            <option>Pro</option>
-            <option>Enterprise</option>
-          </select>
-
-          <label>Notification Preferences</label>
-          <div className="checkbox-group">
-            <label>
-              <input
-                type="checkbox"
-                name="notifications.email"
-                checked={profile.notifications.email}
-                onChange={handleChange}
-              />
-              Email
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="notifications.sms"
-                checked={profile.notifications.sms}
-                onChange={handleChange}
-              />
-              SMS
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="notifications.push"
-                checked={profile.notifications.push}
-                onChange={handleChange}
-              />
-              Push Notifications
-            </label>
-          </div>
-
-          <label>
-            <input
-              type="checkbox"
-              name="twoFactorAuth"
-              checked={profile.twoFactorAuth}
-              onChange={handleChange}
-            />
-            Enable Two-Factor Authentication (2FA)
-          </label>
-
           <label>Password</label>
           <input
             type="password"

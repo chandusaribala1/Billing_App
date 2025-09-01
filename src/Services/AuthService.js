@@ -1,8 +1,7 @@
 
-import api from "./axios";// use your axios instance
+import api from "./axios";
 
-const AUTH_URL = "/auth"; // base path for backend auth APIs
-
+const AUTH_URL = "/auth"; 
 class AuthService {
   async login(username, password) {
     try {

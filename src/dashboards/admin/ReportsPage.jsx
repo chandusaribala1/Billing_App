@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { BarChart2, FileText, Users, DollarSign, Briefcase } from 'lucide-react';
+import axios from "../../Services/axios";
 import {
   BarChart,
   Bar,
@@ -107,6 +107,7 @@ const ReportsPage = () => {
   
   const handleGenerateReport = async (reportType) => {
     setMessage(`Generating ${reportType} report...`);
+    
     setReportData(null);
 
     try {
@@ -114,39 +115,59 @@ const ReportsPage = () => {
       let res;
 
       if (reportType === "Customer") {
-      res = await axios.get(`http:/localhost:8080/customer/1`, {
+      res = await axios.get(`http://localhost:8080/reports/customer/9`, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } else if (reportType === "Invoices") {
       const month = "2025-08";
       res = await axios.get(
-        `http:/localhost:8080/invoices/monthly?month=${month}`,
+        `http://localhost:8080/reports/invoices/monthly?month=${month}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
     } else if (reportType === "Products") {
-      res = await axios.get("http:/localhost:8080/products", {
+      res = await axios.get("http://localhost:8080/products", {
       headers: { Authorization: `Bearer ${token}` },
     });
     }
+let formatted = [];
 
-    // Normalize data for recharts
-    const formatted =
-      Array.isArray(res.data)
-        ? res.data
-        : res.data.data
-        ? res.data.data
-        : [res.data];
+if (reportType === "Customer") {
+  const customer = res.data.customer;
+  const invoiceCount = res.data.invoices?.length || 0;
+  formatted = [{
+    name: customer.name,
+    invoiceCount
+  }];
+} else if (reportType === "Invoices") {
+  const month = "2025-08";
+  const invoiceRes = await axios.get(
+    `http://localhost:8080/reports/invoices/monthly?month=${month}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
 
-    setReportData(formatted);
-    setReportType(reportType);
-    setMessage(`'${reportType}' report generated successfully!`);
-  } catch (err) {
-    console.error(err);
-    setMessage(`Failed to generate ${reportType} report`);
-  }
+  formatted = Object.entries(invoiceRes.data).map(([key, value]) => ({
+    name: key,
+    value: Number(value)
+  }));
+} else if (reportType === "Products") {
+  formatted = res.data.map(prod => ({
+    name: prod.name,
+    price: prod.price
+  }));
+}
 
-  setTimeout(() => setMessage(null), 3000);
-  };
+console.log("Formatted data for chart:", formatted);
+setReportData(formatted);
+
+setReportType(reportType);
+setMessage(`'${reportType}' report generated successfully!`);
+} catch (err) {
+  console.error(err);
+  setMessage(`Failed to generate ${reportType} report`);
+}
+
+setTimeout(() => setMessage(null), 3000);
+};
 
 
   return (
@@ -163,17 +184,6 @@ const ReportsPage = () => {
         {message && <div className="message">{message}</div>}
         
         <div className="grid">
-          {/* Sales Summary */}
-          {/* <div className="card">
-            <DollarSign size={48} color="#16a34a" style={{ marginBottom: "16px" }} />
-            <h3>Sales Summary</h3>
-            <p>Quick overview of total revenue and transactions.</p>
-            <button className="btn-green" onClick={() => handleGenerateReport('Sales Summary')}>
-              Generate Report
-            </button>
-          </div> */}
-
-          {/* Customer Report */}
           <div className="card">
             <Users size={48} color="#4f46e5" style={{ marginBottom: "16px" }} />
             <h3>Customer Report</h3>
@@ -182,8 +192,6 @@ const ReportsPage = () => {
               Generate Report
             </button>
           </div>
-
-          {/* Invoices Report */}
           <div className="card">
             <FileText size={48} color="#ca8a04" style={{ marginBottom: "16px" }} />
             <h3>Invoices Report</h3>
@@ -192,8 +200,6 @@ const ReportsPage = () => {
               Generate Report
             </button>
           </div>
-
-          {/* Products Report */}
           <div className="card">
             <Briefcase size={48} color="#db2777" style={{ marginBottom: "16px" }} />
             <h3>Products Report</h3>
@@ -206,24 +212,38 @@ const ReportsPage = () => {
         {reportData && (
           <div style={{ width: "100%", height: 300, marginBottom: "20px", background: "#fff", padding: "12px", borderRadius: "8px" }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={reportData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey={
-                  reportType === "Sales Summary" ? "date" :
-                  reportType === "Customer" ? "customerName" :
-                  reportType === "Invoices" ? "month" :"name"  // fallback (Products etc.)
-                  } />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" fill="#4f46e5" />
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChart data={reportData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey={
+                reportType === "Customer" ? "name" :
+                reportType === "Invoices" ? "name" :
+                reportType === "Products" ? "name" : "date"
+              }
+            />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar 
+              dataKey={
+                reportType === "Customer" ? "invoiceCount" :
+                reportType === "Invoices" ? "value" :
+                reportType === "Products" ? "price" : "value"
+              }
+            fill="#4f46e5"
+            />
+            </BarChart>
+          </ResponsiveContainer>
+            {reportData && (!Array.isArray(reportData) || reportData.length === 0) && (
+            <div style={{ background: "#fff", padding: "12px", borderRadius: "8px" }}>
+              <p>No chartable data available. Showing raw JSON:</p>
+              <pre>{JSON.stringify(reportData, null, 2)}</pre>
+            </div>
+          )}
           </div>
         )}
       </div>
     </>
   );
 };
-
 export default ReportsPage;

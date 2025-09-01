@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Users, Plus, Edit, Trash2 } from "lucide-react"; // same icon style as ProductsPage
+import { Users, Plus, Edit, Trash2 } from "lucide-react";
 import api from "../../Services/axios";
 
 const CustomerPage = () => {
@@ -11,7 +11,7 @@ const CustomerPage = () => {
     phone: "",
     address: "",
   });
-  const [formMode, setFormMode] = useState("add"); // "add" or "edit"
+  const [formMode, setFormMode] = useState("add"); 
   const [showFormModal, setShowFormModal] = useState(false);
 
   useEffect(() => {
@@ -64,7 +64,6 @@ const CustomerPage = () => {
 
   return (
     <div className="page-container p-6">
-      {/* 🔹 Header with Title + Add Button */}
       <div className="header-container flex flex-col md:flex-row justify-between items-center mb-6">
         <h2 className="title flex items-center text-xl font-bold text-gray-700">
           <Users size={24} className="mr-2 text-gray-500" />
@@ -82,7 +81,6 @@ const CustomerPage = () => {
         </button>
       </div>
 
-      {/* 🔹 Table */}
       <div className="table-container overflow-x-auto border rounded shadow bg-white">
         <table className="min-w-full border-separate">
           <thead className="bg-gray-100">
@@ -148,7 +146,6 @@ const CustomerPage = () => {
         </table>
       </div>
 
-      {/* 🔹 Modal */}
       {showFormModal && (
         <div className="modal-overlay fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
           <div className="modal-content bg-white p-6 rounded shadow-lg w-96">

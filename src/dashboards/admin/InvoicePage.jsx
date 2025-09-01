@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from "react";
-import { FaEye, FaEdit, FaTrash } from "react-icons/fa"; // Icons
+import { FaEye, FaEdit, FaTrash } from "react-icons/fa"; 
 import api from "../../Services/axios";
 const InvoicePage = () => {
   const [search, setSearch] = useState("");
@@ -32,15 +32,6 @@ const InvoicePage = () => {
   };
   fetchInvoices();
 }, []);
-
-  const filteredInvoices = (invoices || []).filter(
-    (inv) =>
-      (inv.customerName || `Customer ${inv.customerId}`)
-        .toLowerCase()
-        .includes(search.toLowerCase()) ||
-      inv.id.toString().includes(search)
-  );
-
   const handleChange = (e) => {
     setNewInvoice({ ...newInvoice, [e.target.name]: e.target.value });
   };
@@ -65,7 +56,6 @@ const handleSaveInvoice = async () => {
         const res = await api.post("/invoices", payload);
         setInvoices([...invoices, res.data]);
       }
-
       setShowModal(false);
       setEditingId(null);
       setNewInvoice({ customerId: "", due: "", amount: "", status: "UNPAID" });
@@ -73,8 +63,6 @@ const handleSaveInvoice = async () => {
       console.error("Error saving invoice:", err.response?.data || err.message);
     }
   };
-
-
 const handleEdit = (inv) => {
     setNewInvoice({
       customerId: inv.customerId,
@@ -110,7 +98,6 @@ const handleEdit = (inv) => {
         />
         <button className="add-btn" onClick={() => setShowModal(true)}>+ Add Invoice</button>
       </div>
-
       <table className="invoice-table">
         <thead>
           <tr>
@@ -142,13 +129,12 @@ const handleEdit = (inv) => {
         );
         return (
           <tr key={inv.id}>
-            <td>{`INV${inv.id.toString().padStart(3, "0")}`}</td>
+            <td>{inv.id}</td>
             <td>{inv.customer.name}</td>
             <td>{inv.dueDate.split("T")[0]}</td>
-            <td>{totalAmount.toFixed(2)}</td>
+            <td>{(inv.amount || totalAmount).toFixed(2)}</td>
             <td>{inv.status}</td>
             <td>
-              <button className="icon-btn view-btn"><FaEye /></button>
               <button
                 className="icon-btn edit-btn"
                 onClick={() => handleEdit(inv)}
@@ -263,7 +249,8 @@ const handleEdit = (inv) => {
         text-align: center;
         }
         .invoice-table th {
-        background: #f4f4f4;
+          background: linear-gradient(125deg, #e374f4,#aa1bed);
+          
         }
         .status {
         padding: 5px 10px;
@@ -313,10 +300,7 @@ const handleEdit = (inv) => {
         .icon-btn:hover::after { 
         opacity: 1; 
         }
-        .view-btn { 
-        background: white; 
-        color:blue; 
-        }
+        
         .edit-btn { 
         background: white; 
         color: green; 

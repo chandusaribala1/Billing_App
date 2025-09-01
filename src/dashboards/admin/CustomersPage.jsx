@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Users, Plus, Edit, Trash2 } from "lucide-react"; // same icon style as ProductsPage
+import { Users, Plus, Edit, Trash2 } from "lucide-react"; 
 import api from "../../Services/axios";
 
 const CustomerPage = () => {
@@ -11,7 +11,7 @@ const CustomerPage = () => {
     phone: "",
     address: "",
   });
-  const [formMode, setFormMode] = useState("add"); // "add" or "edit"
+  const [formMode, setFormMode] = useState("add");
   const [showFormModal, setShowFormModal] = useState(false);
 
   useEffect(() => {

@@ -7,7 +7,6 @@ import InvoicePage from "./InvoicePage.jsx";
 import PaymentPage from "./PaymentPage.jsx";
 import ProductsPage from "./ProductsPage.jsx";
 import ReportsPage from "./ReportsPage.jsx";
-import PaymentsPage from './../accountant/PaymentsPage';
 import axios from "axios";
 const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,9 +14,6 @@ const AdminDashboard = () => {
   const [activePage, setActivePage] = useState("dashboard");
   const [products, setProducts] = useState([]);
   const [invoices, setInvoices] = useState([]);
-  
-
-  // Dummy KPI data
   const [kpis, setKpis] = useState({
     users: 0,
     Invoices: 0,
@@ -34,12 +30,12 @@ const [users, setUsers] = useState([]);
 
 const fetchCustomerCount = async () => {
   try {
-    const token = localStorage.getItem("token"); // ✅ get token saved on login
+    const token = localStorage.getItem("token"); 
     const res = await axios.get("http://localhost:8080/customers", {
-      headers: { Authorization: `Bearer ${token}` }, // ✅ attach token
+      headers: { Authorization: `Bearer ${token}` },
     });
-    setKpis((prev) => ({ ...prev, users: res.data.length })); // count from DB
-    setUsers(res.data); // ✅ store list of users for table
+    setKpis((prev) => ({ ...prev, users: res.data.length })); 
+    setUsers(res.data); 
 
   } catch (err) {
     console.error("Error fetching customer count:", err);
@@ -51,8 +47,8 @@ const fetchProductCount = async () => {
     const res = await axios.get("http://localhost:8080/products", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    setKpis((prev) => ({ ...prev, products: res.data.length })); // store count
-    setProducts(res.data); // keep list if needed
+    setKpis((prev) => ({ ...prev, products: res.data.length })); 
+    setProducts(res.data); 
   } catch (err) {
     console.error("Error fetching product count:", err);
   }
@@ -64,28 +60,29 @@ const fetchInvoiceCount = async () => {
     const res = await axios.get("http://localhost:8080/invoices", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    // console.log("Invoices API raw response:", res);
     console.log("Invoices API response:", res.data);
 
-    // Ensure we have an array
+    
     let invoicesArray = [];
-    if (Array.isArray(res.data)) {
-      invoicesArray = res.data.map(inv => ({
-        id: inv.id,
-        
-        dueDate: inv.dueDate,
-        status: inv.status,
-        totalAmount: inv.amount,
-        customerId: inv.customerId,
-        customerName: inv.customerName || `Customer ${inv.customerId}`, // fallback if no name
-      }));
-    }
-
-    setInvoices(invoicesArray);
-    setKpis(prev => ({ ...prev, invoices: invoicesArray.length }));
+if (Array.isArray(res.data)) {
+  invoicesArray = res.data.map(inv => ({
+    id: inv.id,
+    dueDate: inv.dueDate,
+    status: inv.status,
+    totalAmount: inv.items?.reduce(
+      (sum, item) => sum + (item.unitPrice || 0) * (item.quantity || 0),
+      0
+    ) || 0,
+    customerId: inv.customer?.id || 0,
+    customerName: inv.customer?.name || `Customer ${inv.customerId}`,
+  }));
+}
+setInvoices(invoicesArray);
+setKpis(prev => ({ ...prev, invoices: invoicesArray.length }));
+<InvoicePage onUpdate={fetchInvoiceCount} />
   } catch (err) {
     console.error("Error fetching invoice count:", err);
-    setInvoices([]); // fallback to empty array
+    setInvoices([]); 
     setKpis(prev => ({ ...prev, invoices: 0 }));
   }
 };
@@ -97,28 +94,16 @@ const storedToken = localStorage.getItem("token");
 
 if (storedToken) {
   try {
-    const token = storedToken.replace("Bearer ", ""); // ✅ clean token
+    const token = storedToken.replace("Bearer ", ""); 
     const decoded = jwtDecode(token);
 
-    // By default, Spring Security puts username in "sub"
+    
     adminName = decoded.sub || decoded.username || "Profile";
   } catch (err) {
     console.error("Invalid token:", err);
   }
 }
-
-  // Sales data for chart
-  const salesData = [
-    { month: "Jan", sales: 4000 },
-    { month: "Feb", sales: 3200 },
-    { month: "Mar", sales: 4500 },
-    { month: "Apr", sales: 3800 },
-    { month: "May", sales: 5200 },
-    { month: "Jun", sales: 6100 },
-    { month: "Jul", sales: 7000 },
-  ];
-
-  // Render main dashboard content
+  
   const renderDashboard = () => (
     <>
       <div className="kpi-cards">
@@ -179,51 +164,22 @@ if (storedToken) {
     </tr>
   </thead>
   <tbody>
-    {Array.isArray(invoices) && invoices.map((invoice) => (
-      <tr key={invoice.id}>
-        <td>{invoice.id}</td>
-        <td>{invoice.customerName}</td>
-        <td>{invoice.totalAmount?.toLocaleString() || 0}</td>
-        <td>{invoice.dueDate}</td>
-        <td>{invoice.status}</td>
+    {Array.isArray(invoices) && invoices.map((inv) => (
+      <tr key={inv.id}>
+        <td>{inv.id}</td>
+        <td>{inv.customerName}</td>
+        <td>{inv.totalAmount?.toLocaleString() || 0}</td>
+        <td>{inv.dueDate}</td>
+        <td>{inv.status}</td>
       </tr>
     ))}
   </tbody>
 </table>
 
-
-
-      {/* <div className="notifications">
-        <h2>Notifications</h2>
-        <ul>
-          {notifications.map((note, idx) => (
-            <li key={idx}>{note}</li>
-          ))}
-        </ul>
-      </div> */}
-
-      <div className="charts">
-        <h2>Sales Over Time</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={salesData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="sales"
-              stroke="#4caf50"
-              strokeWidth={3}
-              activeDot={{ r: 8 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
     </>
   );
 
-  // Render selected page component or dashboard
+  
   const renderPage = () => {
     switch (activePage) {
       case "customers":
@@ -429,6 +385,7 @@ if (storedToken) {
           overflow: hidden;
           box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
+          
         th, td {
           padding: 12px 15px;
           border-bottom: 1px solid #ddd;
@@ -436,7 +393,7 @@ if (storedToken) {
           color: #555;
         }
         th {
-          background-color: #f5f5f5;
+          background: linear-gradient(125deg, #e374f4,#aa1bed);
           font-weight: 600;
         }
         tr:last-child td {
@@ -460,45 +417,7 @@ if (storedToken) {
         .status.Banned, .status.Cancelled {
           background-color: #f44336;
         }
-        .notifications {
-          background: white;
-          padding: 20px;
-          border-radius: 10px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          margin: 0 25px 40px;
-          max-width: calc(100% - 50px);
-        }
-        .notifications h2 {
-          margin-bottom: 15px;
-          color: #333;
-        }
-        .notifications ul {
-          list-style: none;
-          padding-left: 0;
-          max-height: 180px;
-          overflow-y: auto;
-        }
-        .notifications li {
-          padding: 10px 0;
-          border-bottom: 1px solid #eee;
-          color: #555;
-        }
-        .notifications li:last-child {
-          border-bottom: none;
-        }
-        .charts {
-          background: white;
-          padding: 20px;
-          border-radius: 10px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          margin: 0 25px 40px;
-          max-width: calc(100% - 50px);
-        }
-        .charts h2 {
-          margin-bottom: 20px;
-          color: #333;
-          text-align: center;
-        }
+        
         @media (max-width: 900px) {
           .kpi-cards {
             flex-direction: column;
@@ -548,6 +467,7 @@ if (storedToken) {
               >
                 <Menu size={24} />
               </button>
+              {sidebarOpen && <span>AccuBillify</span>}
           </div>
           
           <div className="sidebar-menu">
@@ -612,26 +532,14 @@ if (storedToken) {
                 onClick={() => {
                 localStorage.removeItem("token");
                 localStorage.removeItem("username");
-                window.location.href = "/login"; // redirect to signin page
+                window.location.href = "/login";
               }}
               >
               <LogOut size={18} />
                 Logout
               </button>
-
             </div>
           </header>
-
-          <div className="search-bar">
-            <input
-              type="text"
-              placeholder="Search users, orders, products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Search size={20} />
-          </div>
-
           {renderPage()}
         </main>
       </div>

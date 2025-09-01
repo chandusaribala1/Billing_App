@@ -3,25 +3,33 @@ import { Menu, UserCircle2, LogOut, FileText, DollarSign } from "lucide-react";
 import MyInvoicesPage from "./MyInvoicesPage.jsx";
 import MyPaymentsPage from "./MyPaymentsPage.jsx";
 import CustomerProfile from "./CustomerProfile.jsx";
+import { jwtDecode } from "jwt-decode";
 
 const CustomerDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  // Use state to manage the active page, just like in AdminDashboard
-  const [activePage, setActivePage] = useState("profile"); // Set a default page
+  const [activePage, setActivePage] = useState("profile");
 
   const handleLogout = () => {
-    // Add your logout logic here (e.g., clearing tokens)
     console.log("Logging out...");
-    // navigate("/login"); // No need for navigate if we redirect
     window.location.href = "/login";
   };
 
+  let customerName = "Profile";
+  const storedToken = localStorage.getItem("token");
+  
+  if (storedToken) {
+    try {
+      const token = storedToken.replace("Bearer ", "");
+      const decoded = jwtDecode(token);
+    customerName = decoded.sub || decoded.username || "Profile";
+    } catch (err) {
+      console.error("Invalid token:", err);
+    }
+  }
   const links = [
     { name: "Invoices", id: "invoices", icon: FileText },
     { name: "Payments", id: "payments", icon: DollarSign },
   ];
-
-  // Render the component for the active page
   const renderPage = () => {
     switch (activePage) {
       case "invoices":
@@ -31,13 +39,12 @@ const CustomerDashboard = () => {
       case "profile":
         return <CustomerProfile />;
       default:
-        return <CustomerProfile />; // Fallback to profile page
+        return <CustomerProfile />;
     }
   };
 
   return (
     <div className="dashboard-wrapper">
-      {/* Sidebar */}
       <nav className={`sidebar ${sidebarOpen ? "" : "collapsed"}`}>
         <div className="sidebar-header">
           <button
@@ -51,7 +58,6 @@ const CustomerDashboard = () => {
         </div>
         <div className="sidebar-menu">
           {links.map((link, index) => (
-            // Use a div with an onClick handler to change the activePage state
             <div
               key={index}
               className={`sidebar-menu-item ${activePage === link.id ? "active" : ""}`}
@@ -61,24 +67,16 @@ const CustomerDashboard = () => {
               <span>{link.name}</span>
             </div>
           ))}
-        </div>
-        <div className="sidebar-footer">
-          <button
-            onClick={handleLogout}
-            className="sidebar-menu-item"
-          >
-            <LogOut size={20} />
-            <span>Logout</span>
-          </button>
+          <div className="sidebar-email-display">
+    <UserCircle2 size={18} />
+    <span>{customerName}</span>
+  </div>
         </div>
       </nav>
-
-      {/* Main Content */}
       <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
         <header className="navbar">
           <div className="navbar-left">Customer Dashboard</div>
           <div className="navbar-right">
-            {/* Use div for profile link as well to handle state change */}
             <div
               className={`navbar-profile-link ${activePage === "profile" ? "active" : ""}`}
               onClick={() => setActivePage("profile")}
@@ -93,7 +91,6 @@ const CustomerDashboard = () => {
           </div>
         </header>
         <div className="page-content">
-          {/* Render the selected page component */}
           {renderPage()}
         </div>
       </main>
@@ -112,7 +109,6 @@ const CustomerDashboard = () => {
           font-family: Arial, sans-serif;
           overflow: hidden; 
         }
-
         .sidebar {
           background: linear-gradient(125deg, #e374f4, #aa1bed, #844582, #a6dff4);
           color: white;
@@ -130,14 +126,17 @@ const CustomerDashboard = () => {
           text-align: center;
           border-bottom: 1px solid rgba(255,255,255,0.2);
           display: flex;
+          // font-size: 1.5rem;
           align-items: center;
-          justify-content: ${sidebarOpen ? 'space-between' : 'center'};
+          // user-select: none;
+          justify-content: ${sidebarOpen ? 'start' : 'center'};
         }
         .sidebar-header div {
           margin-left: ${sidebarOpen ? '10px' : '0'};
           font-weight: bold;
-          font-size: 1.2rem;
+          font-size: 1.5rem;
           opacity: ${sidebarOpen ? '1' : '0'};
+          user-select: none;
           transition: opacity 0.3s ease;
         }
         .sidebar-toggle-btn {
@@ -149,6 +148,20 @@ const CustomerDashboard = () => {
         .sidebar-menu {
           flex-grow: 1;
         }
+        .sidebar-email-display {
+          padding: 12px 20px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: #f1f1f1;
+          opacity: 0.9;
+          font-size: 0.9rem;
+          pointer-events: none; /* makes it unclickable */
+        }
+        .sidebar.collapsed .sidebar-email-display span {
+          display: none;
+        }
+
         .sidebar-menu-item {
           padding: 12px 20px;
           display: flex;
@@ -202,12 +215,14 @@ const CustomerDashboard = () => {
           overflow: hidden;
           text-overflow: ellipsis;
         }
+
         .navbar-right {
             display: flex;
             align-items: center;
             gap: 15px;
             flex-shrink: 0;
         }
+            
         .navbar-right a, .navbar-right div { /* Apply styles to both links and divs */
           color: #555;
           text-decoration: none;
@@ -228,11 +243,11 @@ const CustomerDashboard = () => {
           color: #000;
         }
         .navbar-logout-link {
-            color: #ef4444;
+            color: #0c0b0bff;
         }
         .navbar-logout-link:hover {
             background-color: #fee2e2;
-            color: #dc2626;
+            color: #0b0b0bff;
         }
 
         .page-content {

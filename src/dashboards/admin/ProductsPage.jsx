@@ -1,7 +1,6 @@
 import React, { useState,useEffect } from 'react';
 import { Briefcase, Plus, Edit, Trash2 } from 'lucide-react';
 import api from "../../Services/axios";
-
 function ProductsPage ()  {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,8 +14,6 @@ function ProductsPage ()  {
     stock: "",
   });
   const [editingProduct, setEditingProduct] = useState(null);
-
-  // 🔹 Fetch products on load
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -226,23 +223,17 @@ function ProductsPage ()  {
       background-color: #b91c1c;
     }
   `;
-   // 🔹 Handle form input
   const handleInputChange = (e) => {
     setFormData({ ...formData,
       [e.target.name]: e.target.value ,
     });
   };
-
-  // 🔹 Add / Update Product
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-
     try {
       if (editingProduct) {
-        // Update
         await api.put(`/products/${editingProduct.id}`, formData);
       } else {
-        // Create
         await api.post("/products", formData);
       }
       setShowFormModal(false);
@@ -252,13 +243,11 @@ function ProductsPage ()  {
     } catch (err) {
       console.error("Error saving product", err);
     }
-  };
-  
+  };  
   const handleDeleteClick = (product) => {
     setProductToDelete(product);
     setShowDeleteModal(true);
   };
-
   const confirmDelete = async() => {
     try {
       await api.delete(`/products/${productToDelete.id}`);
@@ -269,12 +258,9 @@ function ProductsPage ()  {
       console.error("Error deleting product", err);
     }
   };
-  // ✅ Filter products
   const filteredProducts = products.filter((p) =>
   (p.name || "").toLowerCase().includes(searchTerm.toLowerCase())
 );
-
-
   return (
     <>
       <style>{styles}</style>
@@ -291,12 +277,9 @@ function ProductsPage ()  {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
             />
-            {/* <button className="btn-primary">
-              <Plus size={16} className="btn-icon" /> New Product
-            </button> */}
+            
           </div>
         </div>
-        {/* Add / Edit Product Modal */}
         {showFormModal && (
           <div className="modal-overlay">
           <div className="modal-content">
@@ -329,14 +312,6 @@ function ProductsPage ()  {
           placeholder="Price"
           required
         />
-        {/* <input
-          type="number"
-          name="stock"
-          value={formData.stock}
-          onChange={handleInputChange}
-          placeholder="Stock"
-        /> */}
-
         <div className="modal-actions">
           <button
             type="button"
@@ -371,7 +346,6 @@ function ProductsPage ()  {
                 <th>Name</th>
                 <th>Category</th>
                 <th>Price (₹)</th>
-                {/* <th>Stock</th> */}
                 <th>Actions</th>
               </tr>
             </thead>
@@ -383,7 +357,6 @@ function ProductsPage ()  {
                     <td>{product.name}</td>
                     <td>{product.category}</td>
                     <td>{product.price.toFixed(2)}</td>
-                    {/* <td>{product.stock !== undefined && product.stock !== null ? product.stock : "N/A"}</td> */}
                     <td>
                       <div className="action-buttons">
                         <button
@@ -393,7 +366,6 @@ function ProductsPage ()  {
                           name: product.name || "",
                           category: product.category || "",
                           price: product.price || "",
-                          // stock: product.stock ?? "",
                         });
                         setEditingProduct(product);
                         setShowFormModal(true);
@@ -418,7 +390,6 @@ function ProductsPage ()  {
           </table>
         </div>
       </div>
-
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal-content">

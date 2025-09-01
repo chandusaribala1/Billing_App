@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-// Removed UserCircle2, LogOut as navbar is removed
-// Removed useNavigate as navigation links are no longer present
-
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import axios from "../../Services/axios";
 const MyPaymentPage = () => {
   const [products, setProducts] = useState([]);
   const [productName, setProductName] = useState("");
@@ -13,6 +13,8 @@ const MyPaymentPage = () => {
   const [message, setMessage] = useState("");
   const [showQRCode, setShowQRCode] = useState(false);
   const [showCardForm, setShowCardForm] = useState(false);
+  const [step, setStep] = useState(1);
+  const [selectedGateway, setSelectedGateway] = useState("");
   const [cardDetails, setCardDetails] = useState({
     number: "",
     bank: "",
@@ -20,9 +22,6 @@ const MyPaymentPage = () => {
     expiry: "",
     pin: "",
   });
-
-  const [step, setStep] = useState(1);
-
   const addProduct = () => {
     if (!productName || !quantity || !price) {
       setMessage("⚠ Please fill all product details.");
@@ -53,79 +52,116 @@ const MyPaymentPage = () => {
       return;
     }
     setShowGatewayModal(true);
-    setShowQRCode(false);
-    setShowCardForm(false);
   };
 
-  const handleGatewaySelect = (option) => {
+  const handleGatewaySelect = async (option) => {
+    setSelectedGateway(option);
+    setMessage("");
+
     if (option === "QR Code") {
       setShowQRCode(true);
       setShowCardForm(false);
     } else if (option === "Card") {
       setShowCardForm(true);
       setShowQRCode(false);
+    } else {
+      const token = localStorage.getItem("token");
+      const amount = totalAmount;
+      const currency = "INR";
+
+      try {
+        const response = await axios.post(
+          `http://localhost:8080/api/payments/external/${option.toLowerCase()}?amount=${amount}&currency=${currency}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const redirectUrl = response.data.redirectUrl;
+        if (redirectUrl) {
+          window.location.href = redirectUrl;
+        } else {
+          setMessage("⚠ Payment gateway did not return a redirect URL.");
+        }
+      } catch (error) {
+        console.error("❌ Failed to initiate external payment:", error);
+        setMessage("❌ Failed to initiate gateway payment.");
+      }
     }
   };
 
-  const handleCardPayment = () => {
-    if (
-      !cardDetails.number ||
-      !cardDetails.bank ||
-      !cardDetails.holder ||
-      !cardDetails.expiry ||
-      !cardDetails.pin
-    ) {
+  const generateInvoicePDF = (invoiceId) => {
+    const doc = new jsPDF();
+    doc.text("Invoice", 105, 20, null, null, "center");
+    autoTable(doc, {
+      head: [["Product", "Qty", "Price", "Total"]],
+      body: products.map((p) => [p.name, p.qty, p.price, p.total]),
+    });
+    doc.text(`Invoice ID: #${invoiceId}, 14, doc.autoTable.previous.finalY + 10`);
+    doc.text(`Total Amount: ₹${totalAmount}, 14, doc.autoTable.previous.finalY + 20`);
+    doc.save(`Invoice-${invoiceId}.pdf`);
+  };
+
+  const savePaymentToBackend = async (amount) => {
+    try {
+      const token = localStorage.getItem("token");
+      const paymentDate = new Date().toISOString().split("T")[0];
+      const res = await axios.post(
+        "http://localhost:8080/api/payments",
+        { amount, paymentDate },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const invoiceId = res.data.invoiceId || Math.floor(Math.random() * 9000 + 1000);
+      setHistory([...history, { id: history.length + 1, amount, date: paymentDate, method: selectedGateway }]);
+      generateInvoicePDF(invoiceId);
+    } catch (err) {
+      setMessage("❌ Failed to save payment.");
+    }
+  };
+  const handleQRCodePaymentConfirmed = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const today = new Date().toISOString().split("T")[0];
+
+    const mockPayload = {
+      invoiceId: 1,
+      amount: totalAmount,
+      paymentDate: today,
+      amountInPaise: false
+    };
+
+    await axios.post("http://localhost:8080/api/payments/qr/mock-webhook", mockPayload, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    setShowGatewayModal(false);
+    setShowQRCode(false);
+    setProducts([]);
+    setStep(1);
+    setMessage("✅ QR Code payment confirmed via mock webhook.");
+  } catch (err) {
+    setMessage("❌ QR Payment simulation failed.");
+  }
+};
+   const handleCardPayment = async () => {
+    if (!cardDetails.number || !cardDetails.bank || !cardDetails.holder || !cardDetails.expiry || !cardDetails.pin) {
       setMessage("⚠ Please fill all card details.");
       return;
     }
-
-    if (!/^\d{16}$/.test(cardDetails.number)) {
-      setMessage("⚠ Card number must be 16 digits.");
-      return;
-    }
-
-    if (!/^\d{4}$/.test(cardDetails.pin)) {
-      setMessage("⚠ PIN must be 4 digits.");
-      return;
-    }
-
-    const today = new Date();
-    const expiryDate = new Date(cardDetails.expiry + "-01");
-    if (expiryDate <= today) {
-      setMessage("⚠ Card expiry date must be in the future.");
-      return;
-    }
-
-    const newPayment = {
-      id: history.length + 1,
-      amount: totalAmount,
-      date: new Date().toLocaleDateString(),
-      method: "Card",
-    };
-    setHistory([...history, newPayment]);
-    setMessage(`✅ Payment of ${totalAmount} INR successful via Card`);
+    await savePaymentToBackend(totalAmount);
     setShowGatewayModal(false);
     setShowCardForm(false);
     setProducts([]);
     setCardDetails({ number: "", bank: "", holder: "", expiry: "", pin: "" });
     setStep(1);
+    setMessage("✅ Payment successful via Card.");
   };
 
-
-  const handleQRCodePaymentConfirmed = () => {
-    const newPayment = {
-      id: history.length + 1,
-      amount: totalAmount,
-      date: new Date().toLocaleDateString(),
-      method: "QR Code",
-    };
-    setHistory([...history, newPayment]);
-    setMessage(`✅ Payment of ${totalAmount} INR successful via QR Code`);
-    setShowGatewayModal(false);
-    setShowQRCode(false);
-    setProducts([]);
-    setStep(1);
-  };
 
   return (
     <>
@@ -340,9 +376,7 @@ const MyPaymentPage = () => {
         }
       `}</style>
 
-      <h1 className="page-title">My Payments</h1> {/* "My Payments" title */}
-
-      {/* Payment Section */}
+      <h1 className="page-title">My Payments</h1> 
       <div className="payment-page">
         {step === 1 && (
           <div className="product-form">
@@ -403,7 +437,6 @@ const MyPaymentPage = () => {
         {message && <p className="message">{message}</p>}
       </div>
 
-      {/* Gateway Modal */}
       {showGatewayModal && (
         <div className="modal-overlay">
           <div className="modal">
@@ -411,13 +444,10 @@ const MyPaymentPage = () => {
               <>
                 <h3>Select Payment Gateway</h3>
                 <div className="gateway-buttons">
-                  <button onClick={() => handleGatewaySelect("QR Code")}>
-                    QR Code
-                  </button>
-                  <button onClick={() => handleGatewaySelect("Card")}>
-                    Card
-                  </button>
-                </div>
+              {["QR Code", "Card", "Paypal", "Razorpay", "Stripe", "Paytm", "Instamojo"].map((gateway) => (
+                <button key={gateway} onClick={() => handleGatewaySelect(gateway)}>{gateway}</button>
+              ))}
+            </div>
               </>
             ) : showQRCode ? (
               <>
@@ -435,6 +465,7 @@ const MyPaymentPage = () => {
               </>
             ) : (
               <>
+                <div className="qr-code-container">
                 <h3>Enter Card Details</h3>
                 <input
                   type="text"
@@ -477,8 +508,10 @@ const MyPaymentPage = () => {
                   }
                 />
                 <button onClick={handleCardPayment}>Confirm Payment</button>
+                </div>
               </>
             )}
+            
             <button
               className="close-btn"
               onClick={() => {
@@ -489,8 +522,8 @@ const MyPaymentPage = () => {
             >
               Close
             </button>
+            </div>
           </div>
-        </div>
       )}
     </>
   );

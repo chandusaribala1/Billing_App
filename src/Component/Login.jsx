@@ -6,8 +6,6 @@ import "./Login.css";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [role, setRole] = useState("ADMIN"); // ✅ Added role state
-
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
 
@@ -18,11 +16,9 @@ const Login = () => {
       email,
       password,
     });
-  
-  // ✅ Save JWT token in localStorage for later requests
+
   localStorage.setItem("token", res.data.token);
-    localStorage.setItem("role", res.data.message);// backend sends role in messag
-  // ✅ Redirect based on role returned from backend
+    localStorage.setItem("role", res.data.message);
   const role = res.data.message?.toUpperCase(); 
   localStorage.setItem("role", role);
   if (res.data.message === "ADMIN") {
