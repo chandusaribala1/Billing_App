@@ -1,8 +1,6 @@
-com\BillingApplication\Billings\controller\PaymentController.class
 com\BillingApplication\Billings\exception\PaymentExceededException.class
 com\BillingApplication\Billings\service\payment\PaypalGateway.class
 com\BillingApplication\Billings\dto\AuthResponse.class
-com\BillingApplication\Billings\dto\PaymentRequest.class
 com\BillingApplication\Billings\model\Invoice.class
 com\BillingApplication\Billings\repository\InvoiceRepository.class
 com\BillingApplication\Billings\service\payment\ChecksumGenerator.class
@@ -41,7 +39,6 @@ com\BillingApplication\Billings\service\payment\InstamojoGateway.class
 com\BillingApplication\Billings\model\Customer.class
 com\BillingApplication\Billings\controller\UserController.class
 com\BillingApplication\Billings\service\payment\StripeGateway.class
-com\BillingApplication\Billings\service\PaymentService.class
 com\BillingApplication\Billings\controller\AuthController.class
 com\BillingApplication\Billings\repository\UserRepository.class
 com\BillingApplication\Billings\service\payment\RazorpayGateway.class

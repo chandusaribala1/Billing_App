@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,6 +27,7 @@ public class Invoice {
     private LocalDate dueDate;
 
      @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+     @JsonManagedReference
     private List<InvoiceItem> items = new ArrayList<>();
 
     @Column(precision = 19, scale = 4)
